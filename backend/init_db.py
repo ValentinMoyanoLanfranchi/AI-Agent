@@ -21,10 +21,16 @@ async def create_tables():
         APODRecord, ISSPass, AsteroidRecord, AgentReport, InterAgentAlert
     )
 
+    from sqlalchemy import text
+
     logger.info("🗄️  Conectando a la base de datos...")
     try:
         async with async_engine.begin() as conn:
             logger.info("✅ Conexión exitosa")
+            # PostGIS es requerido por las columnas Geometry + índices GIST.
+            # En Supabase la extensión está disponible pero hay que activarla.
+            logger.info("🧩 Habilitando extensión PostGIS...")
+            await conn.execute(text("CREATE EXTENSION IF NOT EXISTS postgis;"))
             logger.info("📋 Creando tablas...")
             await conn.run_sync(Base.metadata.create_all)
             logger.info("✅ Todas las tablas creadas correctamente")

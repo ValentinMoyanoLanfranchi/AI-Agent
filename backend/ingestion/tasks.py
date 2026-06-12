@@ -15,7 +15,7 @@ Regla de Oro: Los agentes LLM solo leen de PostgreSQL. Esta es la ÚNICA
 import asyncio
 import logging
 from datetime import datetime, date, timedelta
-from typing import List
+from typing import List, Optional
 
 from celery import Celery
 from celery.schedules import crontab

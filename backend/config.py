@@ -3,10 +3,15 @@ config.py — Configuración centralizada de la aplicación.
 Lee variables de entorno vía pydantic-settings.
 """
 from functools import lru_cache
+from pathlib import Path
 from typing import List
 from pydantic_settings import BaseSettings
 from pydantic import field_validator
 import json
+
+# .env vive en la raíz del repo (un nivel arriba de backend/).
+# Resolvemos su ruta absoluta para que funcione sin importar el CWD.
+ENV_FILE = Path(__file__).resolve().parent.parent / ".env"
 
 
 class Settings(BaseSettings):
@@ -19,6 +24,10 @@ class Settings(BaseSettings):
     # ─── Database ─────────────────────────────────────────────
     database_url: str = "postgresql+asyncpg://hackaton:hackaton_pass@db:5432/hackaton_db"
     database_url_sync: str = "postgresql://hackaton:hackaton_pass@db:5432/hackaton_db"
+
+    # ─── Supabase (cliente REST opcional; la migración usa database_url) ──
+    supabase_url: str = ""
+    supabase_key: str = ""
 
     # ─── Redis & Celery ───────────────────────────────────────
     redis_url: str = "redis://redis:6379/0"
@@ -63,7 +72,7 @@ class Settings(BaseSettings):
         return v
 
     class Config:
-        env_file = ".env"
+        env_file = str(ENV_FILE)
         env_file_encoding = "utf-8"
         extra = "ignore"
 
