@@ -1,0 +1,46 @@
+# ─── Credenciales ─────────────────────────────────────────────
+.env
+.env.local
+.env.*.local
+
+# ─── Python ───────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+.venv/
+venv/
+env/
+*.log
+
+# ─── Node / Frontend ──────────────────────────────────────────
+node_modules/
+frontend/dist/
+frontend/build/
+.npm
+
+# ─── Docker ───────────────────────────────────────────────────
+*.pid
+
+# ─── IDEs y OS ────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# ─── Base de datos local ──────────────────────────────────────
+*.sqlite3
+*.db
+
+# ─── Pytest / Coverage ────────────────────────────────────────
+.pytest_cache/
+.coverage
+htmlcov/
