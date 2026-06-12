@@ -13,6 +13,7 @@ Regla de Oro: Los agentes LLM solo leen de PostgreSQL. Esta es la ÚNICA
               fuente que escribe datos desde APIs externas.
 """
 import asyncio
+import concurrent.futures
 import logging
 from datetime import datetime, date, timedelta
 from typing import List, Optional
@@ -58,6 +59,9 @@ celery_app.conf.update(
     task_track_started=True,
     task_acks_late=True,
     worker_prefetch_multiplier=1,
+    # Eager: corre tareas inline sin contactar Redis (broker ni backend).
+    task_always_eager=settings.celery_always_eager,
+    task_eager_propagates=settings.celery_always_eager,
 )
 
 # ─── Beat Schedule (CRON) ─────────────────────────────────────
@@ -96,13 +100,30 @@ celery_app.conf.beat_schedule = {
 
 
 def run_async(coro):
-    """Ejecutar coroutine async desde contexto sync de Celery."""
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
+    """
+    Ejecutar una coroutine desde contexto sync.
+
+    - Worker Celery normal: no hay loop corriendo → usamos uno propio.
+    - Fallback inline dentro de FastAPI (endpoint /api/ingest/all sin broker):
+      ya hay un loop corriendo en este hilo → ejecutamos en un hilo aparte
+      para no chocar con "event loop is already running".
+    """
     try:
-        return loop.run_until_complete(coro)
-    finally:
-        loop.close()
+        asyncio.get_running_loop()
+        loop_running = True
+    except RuntimeError:
+        loop_running = False
+
+    if not loop_running:
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        try:
+            return loop.run_until_complete(coro)
+        finally:
+            loop.close()
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
+        return executor.submit(asyncio.run, coro).result()
 
 
 # ─────────────────────────────────────────────────────────────
@@ -517,18 +538,28 @@ def _parse_dt(dt_str: Optional[str]) -> Optional[datetime]:
     """Parsea strings de fecha de NASA (varios formatos)."""
     if not dt_str:
         return None
+    s = dt_str.strip()
     formats = [
-        "%Y-%m-%dT%H:%MZ",
+        "%Y-%m-%dT%H:%MZ",        # DONKI: 2024-01-01T12:30Z
         "%Y-%m-%dT%H:%M:%SZ",
+        "%Y-%m-%dT%H:%M:%S",
         "%Y-%m-%dT%H:%M",
-        "%Y-%m-%d",
         "%Y-%m-%d %H:%M:%S",
+        "%Y-%m-%d %H:%M",
+        "%Y-%b-%d %H:%M",         # NeoWs: 2026-Jun-12 14:30
+        "%Y-%b-%d",
+        "%Y-%m-%d",               # APOD: 2026-06-12
     ]
     for fmt in formats:
         try:
-            return datetime.strptime(dt_str[:len(fmt)], fmt)
+            return datetime.strptime(s, fmt)
         except (ValueError, TypeError):
             continue
+    # Fallback ISO 8601 (maneja offset y 'Z')
+    try:
+        return datetime.fromisoformat(s.replace("Z", "+00:00"))
+    except (ValueError, TypeError):
+        pass
     logger.warning(f"No se pudo parsear fecha: {dt_str}")
     return None
 

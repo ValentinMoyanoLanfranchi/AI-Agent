@@ -33,6 +33,9 @@ class Settings(BaseSettings):
     redis_url: str = "redis://redis:6379/0"
     celery_broker_url: str = "redis://redis:6379/1"
     celery_result_backend: str = "redis://redis:6379/2"
+    # Modo eager: ejecuta las tareas inline (sin broker/worker Redis).
+    # True para correr local sin Redis; False en producción con worker.
+    celery_always_eager: bool = False
 
     # ─── NASA APIs ────────────────────────────────────────────
     nasa_api_key: str = "DEMO_KEY"
