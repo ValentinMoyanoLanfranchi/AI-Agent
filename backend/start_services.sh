@@ -57,7 +57,9 @@ if [[ ! -f "$ENV_FILE" ]]; then
   fi
 fi
 
-if grep -q "TU-PASSWORD" "$ENV_FILE"; then
+# Solo mirar líneas reales (no comentarios) de DATABASE_URL para no dar falsos
+# positivos con el texto de ayuda que menciona [TU-PASSWORD].
+if grep -E '^\s*DATABASE_URL' "$ENV_FILE" | grep -q "TU-PASSWORD"; then
   echo "❌ El .env todavía tiene el placeholder [TU-PASSWORD] en DATABASE_URL."
   echo "   Completá la contraseña de Supabase antes de arrancar."
   exit 1
