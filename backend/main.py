@@ -12,6 +12,7 @@ from datetime import datetime
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from pydantic import BaseModel, Field
 
 from config import settings
 from database.session import async_engine
@@ -52,6 +53,29 @@ async def lifespan(app: FastAPI):
     await async_engine.dispose()
 
 
+# ─── Metadata de tags (agrupa y describe endpoints en Swagger) ─
+tags_metadata = [
+    {
+        "name": "Sistema",
+        "description": "Health checks e información general del servicio.",
+    },
+    {
+        "name": "Agentes Cognitivos",
+        "description": (
+            "Invocación de los 5 agentes IA (LangGraph). Cada endpoint ejecuta el "
+            "agente sobre las réplicas locales de datos y devuelve el reporte generado "
+            "por el LLM. Soportan notificaciones opcionales por email/Slack."
+        ),
+    },
+    {
+        "name": "Ingesta ETL",
+        "description": (
+            "Disparo manual de las tareas de ingesta (NASA DONKI/EONET/NeoWs/APOD/"
+            "Earthdata/ISS). Corren en background vía Celery; útiles para el seeding inicial."
+        ),
+    },
+]
+
 # ─── FastAPI App ──────────────────────────────────────────────
 app = FastAPI(
     title="🛰️ Sistema de Agentes IA — Hackathon Junio 2026",
@@ -67,8 +91,22 @@ app = FastAPI(
         "Las APIs externas se consumen exclusivamente desde Celery (background)."
     ),
     version="1.0.0",
+    openapi_tags=tags_metadata,
+    contact={
+        "name": "Equipo Hackathon — Sistema de Agentes IA",
+        "email": "team@yourdomain.com",
+    },
+    license_info={"name": "MIT"},
     docs_url="/docs",
     redoc_url="/redoc",
+    openapi_url="/openapi.json",
+    swagger_ui_parameters={
+        "persistAuthorization": True,
+        "docExpansion": "none",
+        "filter": True,
+        "displayRequestDuration": True,
+        "tryItOutEnabled": True,
+    },
     lifespan=lifespan,
 )
 
@@ -101,10 +139,26 @@ app.include_router(agents_router)
 app.include_router(ingestion_router)
 
 
+# ─── Schemas de respuesta (documentación Swagger) ─────────────
+class HealthResponse(BaseModel):
+    status: str = Field(examples=["healthy"])
+    service: str = Field(examples=["Sistema de Agentes IA"])
+    version: str = Field(examples=["1.0.0"])
+    environment: str = Field(examples=["development"])
+    timestamp: str = Field(examples=["2026-06-13T19:35:23.881706"])
+    agents: int = Field(examples=[5])
+
+
 # ─── Health Check ─────────────────────────────────────────────
-@app.get("/health", tags=["Sistema"])
+@app.get(
+    "/health",
+    tags=["Sistema"],
+    summary="Health check",
+    response_description="Estado de salud del servicio",
+    response_model=HealthResponse,
+)
 async def health_check():
-    """Health check del sistema."""
+    """Health check del sistema. Úsalo para readiness/liveness probes."""
     return {
         "status": "healthy",
         "service": "Sistema de Agentes IA",
@@ -115,9 +169,14 @@ async def health_check():
     }
 
 
-@app.get("/", tags=["Sistema"])
+@app.get(
+    "/",
+    tags=["Sistema"],
+    summary="Información del sistema",
+    response_description="Metadatos y mapa de endpoints principales",
+)
 async def root():
-    """Endpoint raíz con información del sistema."""
+    """Endpoint raíz con información del sistema y enlaces a la documentación."""
     return {
         "name": "🛰️ Sistema de Agentes IA — Hackathon Junio 2026",
         "description": "Sistema multiagente de monitoreo espacial y agrícola",

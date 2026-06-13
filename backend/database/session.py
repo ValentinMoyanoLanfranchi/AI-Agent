@@ -1,10 +1,33 @@
 """
 database/session.py — Configuración de sesiones SQLAlchemy async y sync.
 """
+import ssl
+
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, DeclarativeBase
 from config import settings
+
+
+def _is_remote(url: str) -> bool:
+    """True si la DB no es local (ej: Supabase, RDS). Requiere SSL."""
+    return not any(host in url for host in ("@db:", "@localhost", "@127.0.0.1"))
+
+
+# Contexto SSL que cifra sin verificar la cadena: el pooler de Supabase
+# presenta un certificado con CA propia, equivalente a sslmode=require.
+_ssl_no_verify = ssl.create_default_context()
+_ssl_no_verify.check_hostname = False
+_ssl_no_verify.verify_mode = ssl.CERT_NONE
+
+# Connect args específicos por driver cuando la DB es remota (Supabase exige SSL).
+# statement_cache_size=0 hace que asyncpg sea compatible con el pooler de Supabase.
+_async_connect_args = {}
+_sync_connect_args = {}
+if _is_remote(settings.database_url):
+    _async_connect_args = {"ssl": _ssl_no_verify, "statement_cache_size": 0}
+if _is_remote(settings.database_url_sync):
+    _sync_connect_args = {"sslmode": "require"}
 
 
 # ─── Async Engine (FastAPI) ───────────────────────────────────
@@ -14,6 +37,7 @@ async_engine = create_async_engine(
     pool_size=20,
     max_overflow=40,
     pool_pre_ping=True,
+    connect_args=_async_connect_args,
 )
 
 AsyncSessionLocal = async_sessionmaker(
@@ -31,6 +55,7 @@ sync_engine = create_engine(
     pool_size=10,
     max_overflow=20,
     pool_pre_ping=True,
+    connect_args=_sync_connect_args,
 )
 
 SyncSessionLocal = sessionmaker(

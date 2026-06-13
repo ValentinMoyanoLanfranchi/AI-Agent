@@ -6,7 +6,7 @@ from typing import Optional, Literal
 from datetime import datetime
 
 from fastapi import APIRouter, Query, HTTPException, BackgroundTasks
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 from agents.graph import run_master_graph
 from agents.agent1_agricultural import run_agent1
@@ -23,39 +23,116 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/agents", tags=["Agentes Cognitivos"])
 
 
-# ─── Schemas ──────────────────────────────────────────────────
+# ─── Schemas de request ───────────────────────────────────────
 
 class RunAllRequest(BaseModel):
-    days_back: int = Field(default=7, ge=1, le=90)
-    notify_email: bool = False
-    notify_slack: bool = False
+    days_back: int = Field(default=7, ge=1, le=90, description="Ventana de análisis en días")
+    notify_email: bool = Field(default=False, description="Enviar reporte por email (Resend)")
+    notify_slack: bool = Field(default=False, description="Enviar alerta a Slack")
+
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {"days_back": 7, "notify_email": False, "notify_slack": True}
+        }
+    )
 
 
 class RunAgriculturalRequest(BaseModel):
-    region_code: Optional[str] = None
-    days_back: int = Field(default=7, ge=1, le=90)
-    notify_email: bool = False
-    notify_slack: bool = False
+    region_code: Optional[str] = Field(default=None, description="Código de zona agrícola; None = todas")
+    days_back: int = Field(default=7, ge=1, le=90, description="Ventana de análisis en días")
+    notify_email: bool = Field(default=False, description="Enviar reporte por email si severidad HIGH/CRITICAL")
+    notify_slack: bool = Field(default=False, description="Enviar alerta a Slack")
+
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {"region_code": "PAMPA-01", "days_back": 7,
+                        "notify_email": False, "notify_slack": False}
+        }
+    )
 
 
 class RunDisastersRequest(BaseModel):
-    category_filter: Optional[str] = None
-    days_back: int = Field(default=7, ge=1, le=30)
-    check_agricultural_proximity: bool = True
-    notify_email: bool = False
-    notify_slack: bool = False
+    category_filter: Optional[str] = Field(default=None, description="Categoría EONET (wildfires, severeStorms, ...)")
+    days_back: int = Field(default=7, ge=1, le=30, description="Ventana de análisis en días")
+    check_agricultural_proximity: bool = Field(default=True, description="Cruzar con zonas agrícolas vía PostGIS")
+    notify_email: bool = Field(default=False, description="Enviar reporte por email")
+    notify_slack: bool = Field(default=False, description="Enviar alerta a Slack")
+
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {"category_filter": "wildfires", "days_back": 7,
+                        "check_agricultural_proximity": True,
+                        "notify_email": False, "notify_slack": True}
+        }
+    )
 
 
 class RunEducationalRequest(BaseModel):
-    demographic_profile: Literal["NIÑO", "ESTUDIANTE", "EXPERTO", "GENERAL"] = "GENERAL"
-    user_location: str = "Buenos Aires"
-    user_latitude: Optional[float] = -34.6037
-    user_longitude: Optional[float] = -58.3816
+    demographic_profile: Literal["NIÑO", "ESTUDIANTE", "EXPERTO", "GENERAL"] = Field(
+        default="GENERAL", description="Perfil al que se adapta el contenido")
+    user_location: str = Field(default="Buenos Aires", description="Localidad del usuario")
+    user_latitude: Optional[float] = Field(default=-34.6037, description="Latitud para pasos ISS")
+    user_longitude: Optional[float] = Field(default=-58.3816, description="Longitud para pasos ISS")
+
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {"demographic_profile": "ESTUDIANTE", "user_location": "Córdoba",
+                        "user_latitude": -31.4201, "user_longitude": -64.1888}
+        }
+    )
 
 
 class RunNeoWsRequest(BaseModel):
-    days_ahead: int = Field(default=7, ge=1, le=30)
-    notify_email: bool = False
+    days_ahead: int = Field(default=7, ge=1, le=30, description="Días hacia adelante a analizar")
+    notify_email: bool = Field(default=False, description="Enviar reporte por email")
+
+    model_config = ConfigDict(
+        json_schema_extra={"example": {"days_ahead": 7, "notify_email": False}}
+    )
+
+
+# ─── Schemas de respuesta ─────────────────────────────────────
+
+class AgentRunResponse(BaseModel):
+    """Reporte generado por un agente. Acepta campos extra según el agente."""
+    model_config = ConfigDict(
+        extra="allow",
+        json_schema_extra={
+            "example": {
+                "agent": "agent3_space_weather",
+                "status": "success",
+                "severity": "HIGH",
+                "report": "Se detectó tormenta geomagnética Kp=6...",
+                "generated_at": "2026-06-13T19:39:25.139812",
+            }
+        },
+    )
+    agent: Optional[str] = None
+    status: Optional[str] = None
+    severity: Optional[str] = None
+    report: Optional[str] = None
+    generated_at: Optional[str] = None
+
+
+class SystemStatusResponse(BaseModel):
+    status: str = Field(examples=["online"])
+    agents: dict = Field(examples=[{"agent1_agricultural": "ready"}])
+    timestamp: str = Field(examples=["2026-06-13T19:35:23.919425"])
+
+
+class ReportItem(BaseModel):
+    id: int
+    agent_id: int
+    agent_name: str
+    report_type: Optional[str] = None
+    summary: Optional[str] = None
+    severity: Optional[str] = None
+    created_at: Optional[str] = None
+
+
+class ReportsResponse(BaseModel):
+    total: int = Field(examples=[2])
+    reports: list[ReportItem]
 
 
 # ─── Helper: guardar reporte en DB ────────────────────────────
@@ -89,7 +166,12 @@ async def save_agent_report(
 # GET /api/agents/status — Estado del sistema
 # ─────────────────────────────────────────────────────────────
 
-@router.get("/status")
+@router.get(
+    "/status",
+    summary="Estado del sistema de agentes",
+    response_description="Estado online y readiness de cada agente",
+    response_model=SystemStatusResponse,
+)
 async def get_system_status():
     """Retorna el estado general del sistema de agentes."""
     return {
@@ -109,7 +191,12 @@ async def get_system_status():
 # POST /api/agents/run-all — Pipeline completo
 # ─────────────────────────────────────────────────────────────
 
-@router.post("/run-all")
+@router.post(
+    "/run-all",
+    summary="Ejecutar pipeline completo (5 agentes)",
+    response_description="Resultado consolidado del pipeline multiagente",
+    response_model=AgentRunResponse,
+)
 async def run_all_agents(
     request: RunAllRequest,
     background_tasks: BackgroundTasks,
@@ -142,7 +229,12 @@ async def run_all_agents(
 # POST /api/agents/agricultural — Agente 1
 # ─────────────────────────────────────────────────────────────
 
-@router.post("/agricultural")
+@router.post(
+    "/agricultural",
+    summary="Agente 1 — Monitoreo Agrícola (NDVI)",
+    response_description="Reporte de anomalías NDVI y severidad",
+    response_model=AgentRunResponse,
+)
 async def run_agricultural_agent(
     request: RunAgriculturalRequest,
     background_tasks: BackgroundTasks,
@@ -191,7 +283,12 @@ async def run_agricultural_agent(
 # POST /api/agents/disasters — Agente 2
 # ─────────────────────────────────────────────────────────────
 
-@router.post("/disasters")
+@router.post(
+    "/disasters",
+    summary="Agente 2 — Alertas de Desastres (EONET + PostGIS)",
+    response_description="Reporte de eventos y proximidad a zonas agrícolas",
+    response_model=AgentRunResponse,
+)
 async def run_disasters_agent(
     request: RunDisastersRequest,
     background_tasks: BackgroundTasks,
@@ -225,9 +322,14 @@ async def run_disasters_agent(
 # POST /api/agents/space-weather — Agente 3
 # ─────────────────────────────────────────────────────────────
 
-@router.post("/space-weather")
+@router.post(
+    "/space-weather",
+    summary="Agente 3 — Clima Espacial (DONKI / Kp index)",
+    response_description="Reporte de actividad geomagnética y alertas inter-agente",
+    response_model=AgentRunResponse,
+)
 async def run_space_weather_agent(
-    days_back: int = Query(default=3, ge=1, le=14),
+    days_back: int = Query(default=3, ge=1, le=14, description="Ventana de análisis en días"),
     background_tasks: BackgroundTasks = BackgroundTasks(),
 ):
     """
@@ -255,7 +357,12 @@ async def run_space_weather_agent(
 # POST /api/agents/educational — Agente 4
 # ─────────────────────────────────────────────────────────────
 
-@router.post("/educational")
+@router.post(
+    "/educational",
+    summary="Agente 4 — Divulgación Educativa (APOD + ISS)",
+    response_description="Contenido educativo adaptado al perfil y pasos ISS",
+    response_model=AgentRunResponse,
+)
 async def run_educational_agent(
     request: RunEducationalRequest,
     background_tasks: BackgroundTasks,
@@ -280,7 +387,12 @@ async def run_educational_agent(
 # POST /api/agents/neows — Agente 5
 # ─────────────────────────────────────────────────────────────
 
-@router.post("/neows")
+@router.post(
+    "/neows",
+    summary="Agente 5 — Seguimiento de Asteroides (NeoWs)",
+    response_description="Reporte de objetos cercanos (PHA) y contexto de distancias",
+    response_model=AgentRunResponse,
+)
 async def run_neows_agent(
     request: RunNeoWsRequest,
     background_tasks: BackgroundTasks,
@@ -300,11 +412,16 @@ async def run_neows_agent(
 # GET /api/agents/reports — Historial de reportes
 # ─────────────────────────────────────────────────────────────
 
-@router.get("/reports")
+@router.get(
+    "/reports",
+    summary="Historial de reportes",
+    response_description="Lista paginada de reportes generados por los agentes",
+    response_model=ReportsResponse,
+)
 async def get_agent_reports(
-    agent_id: Optional[int] = Query(default=None, ge=1, le=5),
-    severity: Optional[str] = None,
-    limit: int = Query(default=20, ge=1, le=100),
+    agent_id: Optional[int] = Query(default=None, ge=1, le=5, description="Filtrar por ID de agente (1-5)"),
+    severity: Optional[str] = Query(default=None, description="Filtrar por severidad (MINIMAL/LOW/MEDIUM/HIGH/CRITICAL)"),
+    limit: int = Query(default=20, ge=1, le=100, description="Máximo de resultados"),
 ):
     """Retorna el historial de reportes generados por los agentes."""
     from sqlalchemy import desc, select
