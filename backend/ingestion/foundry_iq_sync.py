@@ -121,6 +121,43 @@ def sync_reports_to_foundry_iq() -> int:
     return ok
 
 
+def upsert_report(report: dict) -> bool:
+    """Auto-sync: indexa un único reporte recién generado en Foundry IQ.
+
+    Cierra el loop del sistema — cada reporte que produce un agente queda al
+    instante disponible para el Consultor, sin sincronización manual.
+    """
+    if not settings.foundry_iq_search_enabled:
+        return False
+    try:
+        from azure.core.credentials import AzureKeyCredential
+        from azure.search.documents import SearchClient
+
+        created = report.get("created_at") or ""
+        agent = report.get("agent_name") or "agente"
+        doc = {
+            "id": f"report-{report.get('id')}",
+            "content": report.get("full_report") or report.get("summary") or "",
+            "title": report.get("title") or agent,
+            "agent_name": agent,
+            "source": f"{agent} / {created}",
+            "severity": report.get("severity") or "INFO",
+            "doc_type": "agent_report",
+            "created_at": str(created),
+        }
+        client = SearchClient(
+            endpoint=settings.azure_search_endpoint,
+            index_name=settings.azure_search_index_name,
+            credential=AzureKeyCredential(settings.azure_search_api_key),
+        )
+        client.upload_documents(documents=[doc])
+        logger.info(f"[FoundryIQ] auto-sync: reporte {doc['id']} indexado.")
+        return True
+    except Exception as e:
+        logger.warning(f"[FoundryIQ] auto-sync falló: {e}")
+        return False
+
+
 if __name__ == "__main__":
     if "--create-only" in sys.argv:
         ensure_index()

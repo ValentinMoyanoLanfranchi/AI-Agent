@@ -1,6 +1,7 @@
 """
 api/routes_agents.py — Endpoints REST para invocar los agentes cognitivos.
 """
+import asyncio
 import logging
 from typing import Optional, Literal
 from datetime import datetime
@@ -167,6 +168,22 @@ async def save_agent_report(
             )
             db.add(record)
             await db.commit()
+
+            # Auto-sync a Foundry IQ: el reporte queda disponible al instante para el
+            # Consultor (cierra el loop). Solo agentes 1-5; no re-indexamos las
+            # respuestas del propio Consultor (evita realimentación).
+            if 1 <= agent_id <= 5:
+                await db.refresh(record)
+                from ingestion.foundry_iq_sync import upsert_report
+                await asyncio.to_thread(upsert_report, {
+                    "id": record.id,
+                    "agent_name": agent_name,
+                    "title": record.title,
+                    "full_report": record.full_report,
+                    "summary": record.summary,
+                    "severity": record.severity,
+                    "created_at": record.created_at.isoformat() if record.created_at else "",
+                })
     except Exception as e:
         logger.warning(f"[API] No se pudo persistir reporte del Agente {agent_id}: {e}")
 

@@ -2,6 +2,12 @@
 
 Sistema multiagente de monitoreo espacial y agrícola basado en **LangGraph**, consumiendo APIs de NASA.
 
+> **Agents League Hackathon · Track Reasoning Agents (Microsoft Foundry) · Capa IQ: Foundry IQ**
+>
+> 6 agentes que ayudan a productores de Latinoamérica a anticipar riesgos —estrés hídrico, desastres
+> naturales y pérdida de precisión GPS por clima espacial—. **Todo el cómputo corre en Azure AI Foundry**;
+> el conocimiento se sirve con **Foundry IQ**: respuestas citadas y *grounded* que reducen la alucinación.
+
 ## 🏗️ Arquitectura
 
 ```
@@ -30,7 +36,9 @@ Este proyecto cumple el requisito obligatorio de integrar una capa **Microsoft I
 | **Track** | 🧠 Reasoning Agents (Microsoft Foundry) |
 | **Capa IQ** | 💡 **Foundry IQ** — recuperación de conocimiento agéntica con respuestas citadas/grounded |
 | **Agente** | **Agente Consultor** (`agent6_consultant`) — `POST /api/agents/consult` |
-| **Modelo** | **o4-mini** — modelo razonador real (serie `o`) desplegado en Azure AI Foundry |
+| **Modelo** | **gpt-5.4** (razonador) para el Consultor · **gpt-5.4-mini** para los 5 agentes — todo en Azure AI Foundry |
+
+![Consultor IA — chat conversacional grounded con citas de Foundry IQ](docs/consultor-chat.png)
 
 **Cómo funciona** (razonamiento multi-paso, anti-alucinación):
 1. **RETRIEVE** → recupera contexto citado desde el knowledge base de Foundry IQ (Azure AI Search).
@@ -39,6 +47,10 @@ Este proyecto cumple el requisito obligatorio de integrar una capa **Microsoft I
 
 Es la materialización técnica de la **Regla de Oro** del sistema: los agentes solo responden
 desde la réplica local de conocimiento, nunca alucinan datos.
+
+**🔁 Loop cerrado (auto-sync):** cada reporte que generan los agentes se **indexa automáticamente**
+en Foundry IQ (vía `save_agent_report`), así el Consultor siempre responde con el conocimiento
+más reciente — sin sincronización manual.
 
 **Activación:**
 ```bash
