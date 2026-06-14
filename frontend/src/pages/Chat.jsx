@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { Sparkles, Send, FileText, Brain } from 'lucide-react'
 import { consult } from '../api/agentsApi'
+import MarkdownReport from '../components/MarkdownReport'
 
 const SUGGESTIONS = [
   '¿Hay riesgo GPS para la maquinaria agrícola esta semana?',
@@ -87,9 +88,11 @@ export default function Chat() {
               background: m.role === 'user' ? 'linear-gradient(135deg,#6366f1,#8b5cf6)' : 'var(--bg-primary)',
               color: m.role === 'user' ? '#fff' : 'var(--text-primary)',
               border: m.role === 'user' ? 'none' : '1px solid var(--border-color)',
-              whiteSpace: 'pre-wrap', lineHeight: 1.55, fontSize: '14px',
+              whiteSpace: m.role === 'user' ? 'pre-wrap' : 'normal', lineHeight: 1.55, fontSize: '14px',
             }}>
-              {m.content}
+              {m.role === 'assistant' && !m.error
+                ? <MarkdownReport className="markdown-report chat-markdown">{m.content}</MarkdownReport>
+                : m.content}
               {m.role === 'assistant' && !m.error && m.citations?.length > 0 && (
                 <div style={{ marginTop: '12px', borderTop: '1px solid var(--border-color)', paddingTop: '10px' }}>
                   <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '4px' }}>

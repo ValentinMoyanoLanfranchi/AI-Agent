@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { AlertTriangle, PlayCircle } from 'lucide-react'
 import { runDisasters } from '../api/agentsApi'
 import MarkdownReport from '../components/MarkdownReport'
+import TitleIcon from '../components/TitleIcon'
+import tornadoIcon from '../assets/icons/tornado.svg'
 
 const CATEGORIES = [
   { value: '', label: 'Todas las categorías' },
@@ -46,7 +48,9 @@ export default function Disasters() {
   return (
     <div className="animate-in">
       <div className="page-header">
-        <h2>🌪️ Alertas de Desastres Naturales</h2>
+        <h2 style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <TitleIcon src={tornadoIcon} color="#ef4444" /> Alertas de Desastres Naturales
+        </h2>
         <p>Agente 2 — Director de Gestión de Riesgos · NASA EONET + PostGIS Cono Sur</p>
       </div>
 
