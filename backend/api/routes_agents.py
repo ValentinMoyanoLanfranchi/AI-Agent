@@ -1,6 +1,7 @@
 """
 api/routes_agents.py — Endpoints REST para invocar los agentes cognitivos.
 """
+import asyncio
 import logging
 from typing import Optional, Literal
 from datetime import datetime
@@ -140,6 +141,8 @@ class ConsultRequest(BaseModel):
     """Pregunta en lenguaje natural para el Agente Consultor (Foundry + Foundry IQ)."""
     question: str = Field(..., min_length=3, max_length=1000)
     top_k: int = Field(default=5, ge=1, le=15)
+    # Historial de la conversación: [{role: "user"|"assistant", content: "..."}]
+    history: list[dict] = Field(default_factory=list)
 
 
 # ─── Helper: guardar reporte en DB ────────────────────────────
@@ -165,6 +168,22 @@ async def save_agent_report(
             )
             db.add(record)
             await db.commit()
+
+            # Auto-sync a Foundry IQ: el reporte queda disponible al instante para el
+            # Consultor (cierra el loop). Solo agentes 1-5; no re-indexamos las
+            # respuestas del propio Consultor (evita realimentación).
+            if 1 <= agent_id <= 5:
+                await db.refresh(record)
+                from ingestion.foundry_iq_sync import upsert_report
+                await asyncio.to_thread(upsert_report, {
+                    "id": record.id,
+                    "agent_name": agent_name,
+                    "title": record.title,
+                    "full_report": record.full_report,
+                    "summary": record.summary,
+                    "severity": record.severity,
+                    "created_at": record.created_at.isoformat() if record.created_at else "",
+                })
     except Exception as e:
         logger.warning(f"[API] No se pudo persistir reporte del Agente {agent_id}: {e}")
 
@@ -432,7 +451,9 @@ async def consult_agent(
 
     Razonamiento multi-paso: retrieve (Foundry IQ) → reason (Foundry) → grounded answer.
     """
-    result = await run_consultant(question=request.question, top_k=request.top_k)
+    result = await run_consultant(
+        question=request.question, top_k=request.top_k, history=request.history,
+    )
 
     # Persistir la consulta como reporte del "agente 6"
     background_tasks.add_task(save_agent_report, 6, "agent6_consultant", "consult", {
