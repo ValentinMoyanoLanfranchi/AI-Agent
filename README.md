@@ -35,7 +35,7 @@ Six cognitive agents monitor the Southern Cone with **real NASA data** and — c
 | 🌱 **Agricultural** | Crop health via NDVI, anomalies vs history, water/thermal stress | **NASA MODIS** ✅ real |
 | 🌪️ **Disasters** | Wildfires/floods cross-checked against farmland (PostGIS) | **NASA EONET** ✅ real |
 | ☀️ **Space Weather** | Geomagnetic storms → autonomous **GPS alerts** | **NASA DONKI** ✅ real |
-| 🔭 **Outreach** | APOD adapted to the audience + ISS passes | **NASA APOD** ✅ real |
+| 🔭 **Outreach** | APOD adapted to the audience + ISS passes | **NASA APOD/TLE** ✅ real |
 | ☄️ **Asteroids** | Hazardous NEOs, de-sensationalized | **NASA NeoWs** ✅ real |
 | 💬 **Consultant** | **Natural-language Q&A grounded on every agent** | **gpt-5.4 + Foundry IQ** |
 
@@ -53,7 +53,7 @@ And it's a **closed loop**: every report the agents generate is **auto-indexed i
 agents produce reports  →  Foundry IQ indexes them  →  Consultant answers, cited
 ```
 
-## 🏆 Why it stands out
+## 🚀 Why it stands out
 
 - **🛰️ Unique cross-domain angle** — space weather ↔ agriculture. Nothing else connects them.
 - **▶️ It actually runs** end-to-end, on **real NASA data**, **fully on Azure AI Foundry** — no external API keys.
@@ -132,7 +132,7 @@ curl -X POST http://localhost:8000/api/agents/consult \
 ## 👩‍🚀 Team
 
 Built for the **Microsoft Agents League Hackathon** by students at the
-**Universidad Nacional de Córdoba (FCEFyN)**, Argentina.
+**Universidad Nacional de Córdoba (FCEFyN)**, **Universidad Tecnológica Nacional de Córdoba (UTN FRC)** and **Universidad Católica de Córdoba (UCC)**.
 
 <div align="center">
 
