@@ -37,7 +37,7 @@ from ingestion.nasa_connectors import (
     fetch_apod, fetch_iss_passes, fetch_nasa_power_data,
 )
 from ingestion.copernicus import (
-    fetch_earthdata_ndvi_mock, MONITORED_AGRICULTURAL_ZONES,
+    fetch_earthdata_ndvi_mock, fetch_modis_ndvi, MONITORED_AGRICULTURAL_ZONES,
     detect_ndvi_anomaly,
 )
 
@@ -443,8 +443,12 @@ def ingest_ndvi(self):
     try:
         with SyncSessionLocal() as db:
             for zone in MONITORED_AGRICULTURAL_ZONES:
-                # Fetch (mock en dev, real en prod con AppEEARS)
-                data = run_async(fetch_earthdata_ndvi_mock(zone))
+                # NDVI satelital REAL (MODIS MOD13Q1); fallback al modelo si MODIS no responde
+                try:
+                    data = run_async(fetch_modis_ndvi(zone))
+                except Exception as e:
+                    logger.warning(f"[CELERY] MODIS real falló para {zone['region_code']} ({e}); uso modelo estacional.")
+                    data = run_async(fetch_earthdata_ndvi_mock(zone))
 
                 ndvi_val = data["ndvi_value"]
                 ndvi_hist = data.get("ndvi_5yr_avg", 0.5)

@@ -26,37 +26,37 @@ APPEEARS_BASE = "https://appeears.earthdatacloud.nasa.gov/api"
 MONITORED_AGRICULTURAL_ZONES = [
     {
         "region_code": "ARG-BA-PAMPA",
-        "name": "Pampa Húmeda - Buenos Aires",
-        "latitude": -34.6037,
-        "longitude": -58.3816,
+        "name": "Pampa Húmeda - Pergamino (Buenos Aires)",
+        "latitude": -33.89,
+        "longitude": -60.57,
         "country": "ARG",
     },
     {
         "region_code": "ARG-COR-AGRO",
-        "name": "Córdoba - Zona Agrícola Norte",
-        "latitude": -31.4201,
-        "longitude": -64.1888,
+        "name": "Córdoba - Marcos Juárez (Zona Agrícola)",
+        "latitude": -32.70,
+        "longitude": -62.10,
         "country": "ARG",
     },
     {
         "region_code": "BRA-MT-CERRADO",
-        "name": "Mato Grosso - Cerrado",
-        "latitude": -12.6461,
-        "longitude": -55.9166,
+        "name": "Mato Grosso - Sorriso (Cerrado)",
+        "latitude": -12.54,
+        "longitude": -55.72,
         "country": "BRA",
     },
     {
         "region_code": "URY-SORIANO",
         "name": "Uruguay - Soriano Agrícola",
-        "latitude": -33.4836,
-        "longitude": -57.7556,
+        "latitude": -33.60,
+        "longitude": -57.90,
         "country": "URY",
     },
     {
         "region_code": "CHI-ARAUCANIA",
         "name": "Chile - Araucanía Agrícola",
-        "latitude": -38.7360,
-        "longitude": -72.5904,
+        "latitude": -38.75,
+        "longitude": -72.40,
         "country": "CHI",
     },
 ]
@@ -199,4 +199,82 @@ async def fetch_earthdata_ndvi_mock(zone: Dict) -> Dict:
         "red_band": round(red, 4),
         "satellite_source": "NASA_EARTHDATA_MOCK",
         "measurement_date": date.today().isoformat(),
+    }
+
+
+# ─── NDVI REAL: NASA MODIS MOD13Q1 vía ORNL DAAC (sin autenticación) ───
+MODIS_BASE = "https://modis.ornl.gov/rst/api/v1"
+MODIS_PRODUCT = "MOD13Q1"
+MODIS_NDVI_BAND = "250m_16_days_NDVI"
+
+
+async def _modis_chunk(client, lat, lon, start, end, headers) -> List[Tuple[int, float, str]]:
+    """Un request de subset MODIS (<=10 composites). Devuelve [(doy, ndvi, calendar_date)]."""
+    sr = await client.get(f"{MODIS_BASE}/{MODIS_PRODUCT}/subset",
+                          params={"latitude": lat, "longitude": lon,
+                                  "startDate": start, "endDate": end,
+                                  "band": MODIS_NDVI_BAND,
+                                  "kmAboveBelow": 1, "kmLeftRight": 1},
+                          headers=headers)
+    sr.raise_for_status()
+    p = sr.json()
+    scale = float(p.get("scale", 0.0001))
+    out = []
+    for row in p.get("subset", []):
+        md = row.get("modis_date", "")
+        vals = [v for v in row.get("data", []) if isinstance(v, (int, float)) and -2000 <= v <= 10000]
+        if md and vals:
+            out.append((int(md[5:8]), sum(vals) / len(vals) * scale, row.get("calendar_date", "")))
+    return out
+
+
+async def fetch_modis_ndvi(zone: Dict) -> Dict:
+    """
+    NDVI satelital REAL de NASA (MODIS MOD13Q1, 250m, composite 16 días) vía el
+    servicio público del ORNL DAAC — sin autenticación. Drop-in del mock.
+    La API limita ~10 composites por request, así que se chunkea: una ventana reciente
+    (valor actual) + la misma ventana estacional de los 4 años previos (baseline real).
+    """
+    lat, lon = zone["latitude"], zone["longitude"]
+    headers = {"Accept": "application/json"}
+
+    async with httpx.AsyncClient(timeout=45) as client:
+        dr = await client.get(f"{MODIS_BASE}/{MODIS_PRODUCT}/dates",
+                              params={"latitude": lat, "longitude": lon}, headers=headers)
+        dr.raise_for_status()
+        dates = dr.json().get("dates", [])
+        if not dates:
+            raise ValueError("MODIS sin fechas para el punto")
+        latest = dates[-1]["modis_date"]            # ej. 'A2026113'
+        ly, ld = int(latest[1:5]), int(latest[5:8])
+
+        # Ventana reciente -> valor actual (<=10 composites)
+        cur = await _modis_chunk(client, lat, lon, f"A{ly}{max(1, ld - 150):03d}", latest, headers)
+
+        # Baseline estacional real: misma época del año, 4 años previos
+        seasonal = []
+        for yr in range(ly - 4, ly):
+            lo, hi = max(1, ld - 64), min(361, ld + 64)
+            try:
+                ch = await _modis_chunk(client, lat, lon, f"A{yr}{lo:03d}", f"A{yr}{hi:03d}", headers)
+                seasonal += [a for (doy, a, _) in ch if abs(doy - ld) <= 24]
+            except Exception:
+                continue
+
+    if not cur:
+        raise ValueError("MODIS sin valores NDVI actuales")
+    cur.sort(key=lambda x: x[0])
+    cur_doy, cur_ndvi, cur_cal = cur[-1]
+    if not seasonal:
+        seasonal = [a for (_, a, _) in cur]
+    baseline = sum(seasonal) / len(seasonal)
+
+    return {
+        "zone": zone,
+        "ndvi_value": round(cur_ndvi, 4),
+        "ndvi_5yr_avg": round(baseline, 4),
+        "nir_band": None,
+        "red_band": None,
+        "satellite_source": "NASA_MODIS_MOD13Q1",
+        "measurement_date": cur_cal or date.today().isoformat(),
     }
