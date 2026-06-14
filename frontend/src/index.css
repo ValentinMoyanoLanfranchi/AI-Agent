@@ -525,6 +525,19 @@ body::before {
   margin: 18px 0;
 }
 
+/* Markdown dentro de una burbuja de chat: sin caja propia, texto más nítido */
+.chat-markdown {
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.chat-markdown p,
+.chat-markdown li { color: var(--text-primary); }
+.chat-markdown p:last-child { margin-bottom: 0; }
+.chat-markdown h2 { font-size: 16px; margin: 14px 0 8px; }
+.chat-markdown h3 { font-size: 14px; margin: 12px 0 6px; }
+.chat-markdown ul { margin-bottom: 10px; }
+
 .report-container::-webkit-scrollbar {
   width: 6px;
 }
