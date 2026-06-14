@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { Sun, PlayCircle, Radio } from 'lucide-react'
 import { runSpaceWeather } from '../api/agentsApi'
 import MarkdownReport from '../components/MarkdownReport'
+import TitleIcon from '../components/TitleIcon'
+import weatherIcon from '../assets/icons/weather.svg'
 
 function SeverityBadge({ severity = 'MINIMAL' }) {
   const cls = `badge badge-${(severity || 'minimal').toLowerCase()}`
@@ -38,7 +40,9 @@ export default function SpaceWeather() {
   return (
     <div className="animate-in">
       <div className="page-header">
-        <h2>☀️ Análisis de Clima Espacial</h2>
+        <h2 style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <TitleIcon src={weatherIcon} color="#f59e0b" /> Análisis de Clima Espacial
+        </h2>
         <p>Agente 3 — Astrofísico Especialista · NASA DONKI + Comunicación Inter-Agente</p>
       </div>
 

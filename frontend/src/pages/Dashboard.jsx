@@ -1,6 +1,12 @@
 import { useState, useEffect } from 'react'
 import { Activity, Cpu, Database, Zap, PlayCircle, RefreshCw } from 'lucide-react'
 import { runAllAgents, getSystemStatus, triggerAllIngestion } from '../api/agentsApi'
+import TitleIcon from '../components/TitleIcon'
+import leafIcon from '../assets/icons/leaf.svg'
+import tornadoIcon from '../assets/icons/tornado.svg'
+import weatherIcon from '../assets/icons/weather.svg'
+import scienceIcon from '../assets/icons/science.svg'
+import asteroidIcon from '../assets/icons/asteroid.svg'
 
 const SEVERITY_ORDER = { CRITICAL: 5, HIGH: 4, MEDIUM: 3, LOW: 2, MINIMAL: 1, NONE: 0 }
 
@@ -11,11 +17,11 @@ function SeverityBadge({ severity = 'MINIMAL' }) {
 }
 
 const AGENTS_META = [
-  { key: 'agent1', name: 'Monitoreo Agrícola', icon: '🌱', desc: 'NDVI + NASA Earthdata', color: '#10b981' },
-  { key: 'agent2', name: 'Desastres Naturales', icon: '🌪️', desc: 'NASA EONET + PostGIS', color: '#ef4444' },
-  { key: 'agent3', name: 'Clima Espacial', icon: '☀️', desc: 'NASA DONKI + Kp Index', color: '#f59e0b' },
-  { key: 'agent4', name: 'Divulgación', icon: '🔭', desc: 'NASA APOD + ISS', color: '#8b5cf6' },
-  { key: 'agent5', name: 'Asteroides NeoWs', icon: '☄️', desc: 'NASA NeoWs + PHAs', color: '#06b6d4' },
+  { key: 'agent1', name: 'Monitoreo Agrícola', icon: leafIcon, desc: 'NDVI + NASA Earthdata', color: '#10b981' },
+  { key: 'agent2', name: 'Desastres Naturales', icon: tornadoIcon, desc: 'NASA EONET + PostGIS', color: '#ef4444' },
+  { key: 'agent3', name: 'Clima Espacial', icon: weatherIcon, desc: 'NASA DONKI + Kp Index', color: '#f59e0b' },
+  { key: 'agent4', name: 'Divulgación', icon: scienceIcon, desc: 'NASA APOD + ISS', color: '#8b5cf6' },
+  { key: 'agent5', name: 'Asteroides NeoWs', icon: asteroidIcon, desc: 'NASA NeoWs + PHAs', color: '#06b6d4' },
 ]
 
 export default function Dashboard() {
@@ -149,7 +155,7 @@ export default function Dashboard() {
               className="stat-card"
               style={{ '--accent-color': agent.color }}
             >
-              <div style={{ fontSize: '28px', marginBottom: '4px' }}>{agent.icon}</div>
+              <div style={{ marginBottom: '4px' }}><TitleIcon src={agent.icon} color={agent.color} size={32} /></div>
               <div className="stat-label">{`Agente ${idx + 1}`}</div>
               <div style={{ fontFamily: 'var(--font-display)', fontSize: '15px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '4px' }}>
                 {agent.name}
@@ -209,14 +215,14 @@ export default function Dashboard() {
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             {[
-              { source: 'NASA DONKI', target: 'Agente 3 (Clima Espacial)', icon: '☀️' },
-              { source: 'NASA EONET', target: 'Agente 2 (Desastres)', icon: '🌪️' },
-              { source: 'NASA NeoWs', target: 'Agente 5 (Asteroides)', icon: '☄️' },
-              { source: 'NASA APOD + ISS', target: 'Agente 4 (Educación)', icon: '🔭' },
-              { source: 'NASA Earthdata', target: 'Agente 1 (Agrícola)', icon: '🌱' },
+              { source: 'NASA DONKI', target: 'Agente 3 (Clima Espacial)', icon: weatherIcon, color: '#f59e0b' },
+              { source: 'NASA EONET', target: 'Agente 2 (Desastres)', icon: tornadoIcon, color: '#ef4444' },
+              { source: 'NASA NeoWs', target: 'Agente 5 (Asteroides)', icon: asteroidIcon, color: '#06b6d4' },
+              { source: 'NASA APOD + ISS', target: 'Agente 4 (Educación)', icon: scienceIcon, color: '#8b5cf6' },
+              { source: 'NASA Earthdata', target: 'Agente 1 (Agrícola)', icon: leafIcon, color: '#10b981' },
             ].map(flow => (
               <div key={flow.source} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px' }}>
-                <span>{flow.icon}</span>
+                <TitleIcon src={flow.icon} color={flow.color} size={16} />
                 <span style={{ color: 'var(--text-muted)' }}>{flow.source}</span>
                 <span style={{ color: 'var(--accent-blue)' }}>→ PostgreSQL →</span>
                 <span style={{ color: 'var(--text-secondary)', fontWeight: 500 }}>{flow.target}</span>

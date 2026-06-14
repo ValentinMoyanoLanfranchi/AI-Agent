@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { Zap, PlayCircle, ShieldAlert } from 'lucide-react'
 import { runNeoWs } from '../api/agentsApi'
 import MarkdownReport from '../components/MarkdownReport'
+import TitleIcon from '../components/TitleIcon'
+import asteroidIcon from '../assets/icons/asteroid.svg'
 
 export default function NeoWs() {
   const [daysAhead, setDaysAhead] = useState(7)
@@ -28,7 +30,9 @@ export default function NeoWs() {
   return (
     <div className="animate-in">
       <div className="page-header">
-        <h2>☄️ Seguimiento de Asteroides NeoWs</h2>
+        <h2 style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <TitleIcon src={asteroidIcon} color="#06b6d4" /> Seguimiento de Asteroides NeoWs
+        </h2>
         <p>Agente 5 — Periodista de Datos Científicos · NASA NeoWs · Sin alarmismo, con contexto</p>
       </div>
 
