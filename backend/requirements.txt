@@ -39,6 +39,7 @@ numpy>=2.1.0             # primera serie con wheels para Python 3.13
 pandas>=2.2.3
 shapely>=2.0.6
 pyproj>=3.7.0
+skyfield>=1.49           # pasos ISS reales (SGP4 sobre TLE de Celestrak)
 
 # ─── Config & Utils ───────────────────────────────────────────
 pydantic>=2.9            # 2.7.x / pydantic-core sin wheel cp313

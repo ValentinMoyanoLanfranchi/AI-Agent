@@ -296,24 +296,66 @@ def _generate_mock_iss_passes(latitude: float, longitude: float, n_passes: int =
     return {"message": "success", "response": passes, "_simulated": True}
 
 
+def _compute_real_iss_passes(latitude: float, longitude: float, n_passes: int = 5, days: int = 5) -> Dict:
+    """
+    Predicciones REALES de pasos de la ISS calculadas desde los datos orbitales
+    reales (TLE de Celestrak, NORAD 25544) con skyfield (SGP4). Sin autenticación.
+    Reemplaza a la API discontinuada de Open Notify con cálculo astronómico real.
+    """
+    from datetime import timedelta
+    from skyfield.api import load, wgs84, EarthSatellite
+
+    r = httpx.get("https://celestrak.org/NORAD/elements/gp.php?CATNR=25544&FORMAT=TLE", timeout=20)
+    r.raise_for_status()
+    lines = [ln.strip() for ln in r.text.strip().splitlines() if ln.strip()]
+    if len(lines) < 3 or not lines[1].startswith("1 25544"):
+        raise ValueError("TLE de la ISS inválido")
+    name, l1, l2 = lines[0], lines[1], lines[2]
+
+    ts = load.timescale()
+    sat = EarthSatellite(l1, l2, name, ts)
+    loc = wgs84.latlon(latitude, longitude)
+    t0 = ts.now()
+    t1 = ts.from_datetime(t0.utc_datetime() + timedelta(days=days))
+    times, events = sat.find_events(loc, t0, t1, altitude_degrees=10.0)
+
+    ev = list(zip(times, events))
+    passes, i = [], 0
+    while i < len(ev) and len(passes) < n_passes:
+        if ev[i][1] == 0:  # rise
+            rise_t, culm, j = ev[i][0], None, i + 1
+            while j < len(ev) and ev[j][1] != 2:  # hasta set
+                if ev[j][1] == 1:
+                    culm = ev[j][0]
+                j += 1
+            if j < len(ev):
+                dur = int((ev[j][0].utc_datetime() - rise_t.utc_datetime()).total_seconds())
+                max_el = None
+                if culm is not None:
+                    alt, _, _ = (sat - loc).at(culm).altaz()
+                    max_el = round(float(alt.degrees), 1)
+                passes.append({
+                    "risetime": int(rise_t.utc_datetime().timestamp()),
+                    "duration": dur,
+                    "max_elevation": max_el,
+                })
+                i = j + 1
+                continue
+        i += 1
+    if not passes:
+        raise ValueError("No se calcularon pasos visibles de la ISS")
+    return {"message": "success", "response": passes, "source": "CELESTRAK_TLE_SKYFIELD"}
+
+
 async def fetch_iss_passes(latitude: float, longitude: float, n_passes: int = 5) -> Dict:
     """
     Predicciones de pasos de la ISS sobre una coordenada.
-    Nota: Open Notify iss-pass.json fue discontinuado. Usa fallback simulado si falla.
+    Usa cálculo REAL (TLE Celestrak + skyfield); fallback simulado si algo falla.
     """
     try:
-        async with httpx.AsyncClient(timeout=15) as client:
-            resp = await client.get(
-                f"{OPEN_NOTIFY_BASE}/iss-pass.json",
-                params={"lat": latitude, "lon": longitude, "n": n_passes}
-            )
-            resp.raise_for_status()
-            data = resp.json()
-            if data.get("message") == "success" and data.get("response"):
-                return data
-            raise ValueError("Respuesta vacía de Open Notify")
+        return _compute_real_iss_passes(latitude, longitude, n_passes)
     except Exception as e:
-        logger.warning(f"Open Notify ISS pass API no disponible ({e}). Usando datos simulados.")
+        logger.warning(f"Cálculo real de pasos ISS falló ({e}). Usando datos simulados.")
         return _generate_mock_iss_passes(latitude, longitude, n_passes)
 
 

@@ -521,6 +521,7 @@ def ingest_iss_passes(self):
                             location_name=city["name"],
                             rise_time=rise_dt,
                             duration_seconds=duration,
+                            max_elevation_deg=p.get("max_elevation"),
                         )
                         db.add(record)
                         total += 1

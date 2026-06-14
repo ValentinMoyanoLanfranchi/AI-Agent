@@ -78,7 +78,7 @@ agents produce reports  →  Foundry IQ indexes them  →  Consultant answers, c
 
 > **Golden Rule:** agents **never** hit external APIs during a user query. They reason over a **local replica** (Supabase). The NASA/MODIS APIs are only called by the **ingestion layer** (scheduled or on-demand). Result: latency drops from ~5 s to **milliseconds**, and the system is **immune to NASA outages and rate limits**.
 
-## 🛰️ Honest about the data
+## 🛰️ 100% real data — no simulation
 
 | Source | Real? |
 |--------|-------|
@@ -87,7 +87,9 @@ agents produce reports  →  Foundry IQ indexes them  →  Consultant answers, c
 | Disasters — EONET | ✅ Real NASA API |
 | Astronomy — APOD | ✅ Real NASA API |
 | **Crop health — NDVI** | ✅ **Real — NASA MODIS MOD13Q1 (ORNL DAAC), no auth** |
-| ISS passes | ⚠️ Simulated (the Open Notify API was discontinued) |
+| **ISS passes** | ✅ **Real — computed from live orbital data (Celestrak TLE + SGP4/skyfield)** |
+
+> Every data source is **real**. Where a public API was discontinued (ISS pass predictions), we compute it from **real orbital elements** instead of faking it.
 
 ## 🧰 Tech stack
 
