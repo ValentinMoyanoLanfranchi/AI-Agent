@@ -1,0 +1,86 @@
+# =============================================================
+#  render.yaml — Blueprint de despliegue en Render
+#  Sistema de Agentes IA — Hackathon Junio 2026
+#
+#  Arquitectura en Render (setup liviano, sin Redis ni workers):
+#    - backend  : Web Service (FastAPI/uvicorn). DB = Supabase. Celery EAGER.
+#    - frontend : Static Site (Vite build → dist/).
+#
+#  Las claves secretas (DATABASE_URL, OPENAI_API_KEY, etc.) NO van en este
+#  archivo: se marcan con `sync: false` y se cargan a mano en el dashboard
+#  (o se importan desde el .env con "Add from .env").
+# =============================================================
+
+services:
+  # ─────────────────────────────────────────────
+  # Backend — FastAPI (un solo proceso, Celery eager)
+  # ─────────────────────────────────────────────
+  - type: web
+    name: ai-agent-backend
+    runtime: python
+    region: oregon
+    plan: free
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    # init_db.py habilita PostGIS y crea las tablas (idempotente) antes de servir.
+    preDeployCommand: python init_db.py
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.11"
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: "false"
+      # Celery inline: ejecuta las tareas ETL sin broker Redis ni worker.
+      - key: CELERY_ALWAYS_EAGER
+        value: "true"
+      - key: NASA_API_KEY
+        value: DEMO_KEY
+      # CORS: reemplazar por la URL real del static site cuando exista.
+      - key: CORS_ORIGINS
+        value: '["https://ai-agent-frontend.onrender.com"]'
+      # ── Secretos (cargar a mano en el dashboard, NO commitear) ──
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DATABASE_URL        # postgresql+asyncpg://...supabase.com:5432/postgres
+        sync: false
+      - key: DATABASE_URL_SYNC   # postgresql://...supabase.com:5432/postgres
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      # ── Opcionales (notificaciones / Azure Foundry IQ) ──
+      - key: RESEND_API_KEY
+        sync: false
+      - key: SLACK_WEBHOOK_URL
+        sync: false
+      - key: AZURE_OPENAI_ENDPOINT
+        sync: false
+      - key: AZURE_AI_FOUNDRY_API_KEY
+        sync: false
+      - key: AZURE_SEARCH_ENDPOINT
+        sync: false
+      - key: AZURE_SEARCH_API_KEY
+        sync: false
+
+  # ─────────────────────────────────────────────
+  # Frontend — React/Vite (Static Site)
+  # ─────────────────────────────────────────────
+  - type: web
+    name: ai-agent-frontend
+    runtime: static
+    rootDir: frontend
+    buildCommand: npm ci && npm run build
+    staticPublishPath: dist
+    envVars:
+      # URL del backend (build-time). Reemplazar por la real del web service.
+      - key: VITE_API_URL
+        value: https://ai-agent-backend.onrender.com
+    routes:
+      # SPA fallback para react-router (rutas client-side).
+      - type: rewrite
+        source: /*
+        destination: /index.html
