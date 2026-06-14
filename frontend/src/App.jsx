@@ -2,10 +2,11 @@ import { useState } from 'react'
 import { BrowserRouter, Routes, Route, NavLink, useLocation } from 'react-router-dom'
 import {
   Satellite, Leaf, AlertTriangle, Sun, Telescope, Zap,
-  Activity, Database, Settings, ChevronRight, Radio
+  Activity, Database, Settings, ChevronRight, Radio, MessageSquare
 } from 'lucide-react'
 
 import Dashboard from './pages/Dashboard'
+import Chat from './pages/Chat'
 import Agricultural from './pages/Agricultural'
 import Disasters from './pages/Disasters'
 import SpaceWeather from './pages/SpaceWeather'
@@ -14,6 +15,7 @@ import NeoWs from './pages/NeoWs'
 
 const NAV_ITEMS = [
   { path: '/', label: 'Dashboard', icon: Activity, exact: true },
+  { path: '/chat', label: 'Consultor IA (Foundry IQ)', icon: MessageSquare },
   { path: '/agricultural', label: 'Monitoreo Agrícola', icon: Leaf, agent: 'agent1' },
   { path: '/disasters', label: 'Desastres Naturales', icon: AlertTriangle, agent: 'agent2' },
   { path: '/space-weather', label: 'Clima Espacial', icon: Sun, agent: 'agent3' },
@@ -33,7 +35,7 @@ function Sidebar() {
 
       <nav className="sidebar-nav">
         <div className="nav-label">Sistema</div>
-        {NAV_ITEMS.slice(0, 1).map(item => {
+        {NAV_ITEMS.slice(0, 2).map(item => {
           const Icon = item.icon
           const isActive = location.pathname === item.path
           return (
@@ -49,7 +51,7 @@ function Sidebar() {
         })}
 
         <div className="nav-label" style={{ marginTop: '12px' }}>Agentes Cognitivos</div>
-        {NAV_ITEMS.slice(1).map(item => {
+        {NAV_ITEMS.slice(2).map(item => {
           const Icon = item.icon
           const isActive = location.pathname === item.path
           return (
@@ -106,6 +108,7 @@ export default function App() {
         <main className="main-content">
           <Routes>
             <Route path="/" element={<Dashboard />} />
+            <Route path="/chat" element={<Chat />} />
             <Route path="/agricultural" element={<Agricultural />} />
             <Route path="/disasters" element={<Disasters />} />
             <Route path="/space-weather" element={<SpaceWeather />} />

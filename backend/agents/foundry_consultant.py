@@ -56,7 +56,19 @@ def _build_user_prompt(question: str, grounded: GroundedContext) -> str:
     )
 
 
-def _synthesize_with_foundry(question: str, grounded: GroundedContext) -> str:
+def _build_chat_messages(question: str, grounded: GroundedContext, history) -> list:
+    """Arma la lista de mensajes: system + historial de la conversación + turno actual."""
+    messages = [{"role": "system", "content": CONSULTANT_SYSTEM_PROMPT}]
+    for h in (history or []):
+        role = h.get("role")
+        content = (h.get("content") or "").strip()
+        if role in ("user", "assistant") and content:
+            messages.append({"role": role, "content": content})
+    messages.append({"role": "user", "content": _build_user_prompt(question, grounded)})
+    return messages
+
+
+def _synthesize_with_foundry(question: str, grounded: GroundedContext, history=None) -> str:
     """REASON: razona sobre el contexto con el modelo desplegado en Azure AI Foundry.
 
     Usa el cliente AzureOpenAI contra el data-plane del proyecto Foundry (autenticación
@@ -70,10 +82,7 @@ def _synthesize_with_foundry(question: str, grounded: GroundedContext) -> str:
         api_key=settings.azure_ai_foundry_api_key,
         api_version=settings.azure_ai_foundry_api_version,
     )
-    messages = [
-        {"role": "system", "content": CONSULTANT_SYSTEM_PROMPT},
-        {"role": "user", "content": _build_user_prompt(question, grounded)},
-    ]
+    messages = _build_chat_messages(question, grounded, history)
     kwargs = {"model": settings.azure_ai_foundry_model_deployment, "messages": messages}
     try:
         response = client.chat.completions.create(temperature=settings.llm_temperature, **kwargs)
@@ -106,18 +115,18 @@ def _synthesize_fallback(question: str, grounded: GroundedContext) -> str:
     return "\n".join(lines)
 
 
-def _synthesize(question: str, grounded: GroundedContext) -> Tuple[str, str, str]:
+def _synthesize(question: str, grounded: GroundedContext, history=None) -> Tuple[str, str, str]:
     """Devuelve (respuesta, modelo_usado, modo_razonamiento)."""
     if settings.foundry_enabled:
         try:
-            answer = _synthesize_with_foundry(question, grounded)
+            answer = _synthesize_with_foundry(question, grounded, history)
             return answer, settings.azure_ai_foundry_model_deployment, "azure_ai_foundry"
         except Exception as e:
             logger.warning(f"[Consultor] Foundry falló, uso síntesis fallback: {e}")
     return _synthesize_fallback(question, grounded), "fallback-template", "fallback"
 
 
-async def run_consultant(question: str, top_k: int = 5) -> dict:
+async def run_consultant(question: str, top_k: int = 5, history=None) -> dict:
     """
     Ejecuta el Agente Consultor: retrieve (Foundry IQ) → reason (Foundry) → grounded answer.
 
@@ -132,7 +141,7 @@ async def run_consultant(question: str, top_k: int = 5) -> dict:
         # 1. RETRIEVE — Foundry IQ
         grounded = retrieve_grounded(question, top_k=top_k)
         # 2 + 3. REASON + GROUND
-        answer, model_used, reasoning_mode = _synthesize(question, grounded)
+        answer, model_used, reasoning_mode = _synthesize(question, grounded, history)
 
         return {
             "agent": "agent6_consultant",

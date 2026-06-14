@@ -35,6 +35,10 @@ export const getAgentReports = (params = {}) =>
 export const getSystemStatus = () =>
   api.get('/api/agents/status').then(r => r.data)
 
+// Agente Consultor (Foundry IQ) — chat conversacional grounded
+export const consult = (payload = {}) =>
+  api.post('/api/agents/consult', payload).then(r => r.data)
+
 // ─── Ingesta ──────────────────────────────────────────────────
 
 export const triggerAllIngestion = () =>

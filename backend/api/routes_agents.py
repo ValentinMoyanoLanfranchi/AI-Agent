@@ -140,6 +140,8 @@ class ConsultRequest(BaseModel):
     """Pregunta en lenguaje natural para el Agente Consultor (Foundry + Foundry IQ)."""
     question: str = Field(..., min_length=3, max_length=1000)
     top_k: int = Field(default=5, ge=1, le=15)
+    # Historial de la conversación: [{role: "user"|"assistant", content: "..."}]
+    history: list[dict] = Field(default_factory=list)
 
 
 # ─── Helper: guardar reporte en DB ────────────────────────────
@@ -432,7 +434,9 @@ async def consult_agent(
 
     Razonamiento multi-paso: retrieve (Foundry IQ) → reason (Foundry) → grounded answer.
     """
-    result = await run_consultant(question=request.question, top_k=request.top_k)
+    result = await run_consultant(
+        question=request.question, top_k=request.top_k, history=request.history,
+    )
 
     # Persistir la consulta como reporte del "agente 6"
     background_tasks.add_task(save_agent_report, 6, "agent6_consultant", "consult", {
