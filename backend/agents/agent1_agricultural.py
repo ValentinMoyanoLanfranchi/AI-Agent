@@ -70,11 +70,8 @@ def build_agent1_graph():
     """Construye el grafo LangGraph del Agente 1."""
 
     # LLM con herramientas
-    llm = ChatOpenAI(
-        model=settings.agent1_model,
-        temperature=settings.llm_temperature,
-        api_key=settings.openai_api_key,
-    )
+    from agents.azure_llm import get_agent_llm
+    llm = get_agent_llm()
 
     tools = [get_ndvi_data, get_pending_gps_alerts]
     llm_with_tools = llm.bind_tools(tools)

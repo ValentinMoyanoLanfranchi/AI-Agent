@@ -59,11 +59,8 @@ class AgentState(TypedDict):
 
 
 def build_agent2_graph():
-    llm = ChatOpenAI(
-        model=settings.agent2_model,
-        temperature=settings.llm_temperature,
-        api_key=settings.openai_api_key,
-    )
+    from agents.azure_llm import get_agent_llm
+    llm = get_agent_llm()
 
     tools = [get_active_disasters, get_disasters_near_agricultural_zones]
     llm_with_tools = llm.bind_tools(tools)

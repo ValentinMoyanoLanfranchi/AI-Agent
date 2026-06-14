@@ -46,6 +46,11 @@ pydantic-settings>=2.5
 python-dotenv==1.0.1
 python-jose[cryptography]==3.3.0
 
+# ─── Microsoft Azure AI Foundry + Foundry IQ (Agents League) ──
+# Si hay conflictos de versión, podés aflojar los pins.
+azure-search-documents==11.5.1
+openai==1.54.0
+
 # ─── Notificaciones ───────────────────────────────────────────
 resend==0.8.0
 

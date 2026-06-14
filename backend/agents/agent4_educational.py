@@ -92,24 +92,10 @@ class AgentState(TypedDict):
 
 
 def build_agent4_graph():
-    # Agente 4 usa Claude por su capacidad narrativa superior.
-    # Fallback a OpenAI si no hay clave Anthropic configurada.
-    anthropic_key = settings.anthropic_api_key
-    if anthropic_key and not anthropic_key.startswith("sk-ant-REEMPLAZAR"):
-        llm = ChatAnthropic(
-            model=settings.agent4_model,
-            temperature=0.4,  # Más creatividad para divulgación
-            api_key=anthropic_key,
-        )
-        logger.info("[Agent4] Usando Claude (Anthropic)")
-    else:
-        from langchain_openai import ChatOpenAI
-        llm = ChatOpenAI(
-            model="gpt-4o",
-            temperature=0.4,
-            api_key=settings.openai_api_key,
-        )
-        logger.info("[Agent4] Anthropic no configurado — usando OpenAI GPT-4o como fallback")
+    # Agente 4 corre sobre Azure AI Foundry; temperatura alta para divulgación creativa.
+    from agents.azure_llm import get_agent_llm
+    llm = get_agent_llm(temperature=0.4)
+    logger.info("[Agent4] Usando Azure AI Foundry")
 
     tools = [get_today_apod, get_iss_passes]
     llm_with_tools = llm.bind_tools(tools)

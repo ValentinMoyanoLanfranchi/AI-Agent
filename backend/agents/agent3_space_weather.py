@@ -76,11 +76,8 @@ class AgentState(TypedDict):
 
 
 def build_agent3_graph():
-    llm = ChatOpenAI(
-        model=settings.agent3_model,
-        temperature=settings.llm_temperature,
-        api_key=settings.openai_api_key,
-    )
+    from agents.azure_llm import get_agent_llm
+    llm = get_agent_llm()
 
     tools = [get_space_weather_events]
     llm_with_tools = llm.bind_tools(tools)

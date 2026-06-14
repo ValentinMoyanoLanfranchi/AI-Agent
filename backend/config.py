@@ -64,6 +64,34 @@ class Settings(BaseSettings):
     ndvi_anomaly_threshold: float = -0.15
     disaster_proximity_km: float = 50.0
 
+    # ─── Microsoft Azure AI Foundry (Agents League Hackathon) ─
+    # Proyecto de Azure AI Foundry — hostea el Agente Consultor (track Reasoning).
+    azure_ai_foundry_project_endpoint: str = ""   # https://<recurso>.services.ai.azure.com/api/projects/<proyecto>
+    azure_openai_endpoint: str = ""                # https://<recurso>.openai.azure.com/  (data-plane del modelo)
+    azure_ai_foundry_api_key: str = ""             # key de la cuenta de Foundry
+    azure_ai_foundry_model_deployment: str = "razonador"  # deployment del Consultor (razonador)
+    azure_ai_foundry_agents_deployment: str = "agentes"   # deployment chat con tools para los 5 agentes
+    azure_ai_foundry_api_version: str = "2025-04-01-preview"  # >= 2024-12-01-preview para modelos o-series
+
+    # ─── Foundry IQ — capa de conocimiento (IQ obligatorio) ───
+    # Knowledge base de Foundry IQ que da respuestas citadas/grounded.
+    foundry_iq_knowledge_base: str = ""
+    # Store que respalda el knowledge base (Azure AI Search).
+    azure_search_endpoint: str = ""                # https://<search>.search.windows.net
+    azure_search_api_key: str = ""
+    azure_search_index_name: str = "reportes-agentes"
+
+    @property
+    def foundry_enabled(self) -> bool:
+        """True si el modelo de Azure AI Foundry está configurado (modo real vs fallback)."""
+        return bool(self.azure_openai_endpoint and self.azure_ai_foundry_api_key
+                    and self.azure_ai_foundry_model_deployment)
+
+    @property
+    def foundry_iq_search_enabled(self) -> bool:
+        """True si el knowledge base está respaldado por Azure AI Search."""
+        return bool(self.azure_search_endpoint and self.azure_search_api_key)
+
     @field_validator("cors_origins", mode="before")
     @classmethod
     def parse_cors_origins(cls, v):
