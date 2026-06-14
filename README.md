@@ -130,7 +130,7 @@ curl -X POST http://localhost:8000/api/agents/consult \
 ##  Team
 
 Built for the **Microsoft Agents League Hackathon** by students at the
-**Universidad Nacional de Córdoba (FCEFyN)**, Argentina.
+**Universidad Nacional de Córdoba (FCEFyN)**, **Universidad Tecnologica Nacional de Córdoba (UTN FRC)** and **Universidad Catolica de Córdoba (UCC)**.
 
 <div align="center">
 
