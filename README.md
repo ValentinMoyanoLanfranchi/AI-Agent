@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🛰️ SatellAI
+#  SatellAI
 
 ### *When a solar storm threatens the harvest*
 
@@ -20,32 +20,32 @@ Six AI agents running on **Microsoft Azure AI Foundry** monitor real NASA data, 
 
 ---
 
-## 🌎 The problem
+##  The problem
 
 Autonomous farm machinery across **Latin America depends on GPS**. A geomagnetic storm — triggered by the Sun 150 million km away — can **degrade that GPS and ruin a planting or a harvest**. Two worlds that nobody connects: space weather and the field.
 
-## ✨ What SatellAI does
+##  What SatellAI does
 
 Six cognitive agents monitor the Southern Cone with **real NASA data** and — crucially — **communicate with each other**:
 
-> ⚡ When the **Space Weather agent** detects a geomagnetic storm (Kp above threshold), it **automatically alerts the Agricultural agent** about GPS precision loss in autonomous machinery. **Agents talking to agents, with no human in the loop.**
+>  When the **Space Weather agent** detects a geomagnetic storm (Kp above threshold), it **automatically alerts the Agricultural agent** about GPS precision loss in autonomous machinery. **Agents talking to agents, with no human in the loop.**
 
 | Agent | What it does | Data source |
 |-------|--------------|-------------|
-| 🌱 **Agricultural** | Crop health via NDVI, anomalies vs history, water/thermal stress | **NASA MODIS** ✅ real |
-| 🌪️ **Disasters** | Wildfires/floods cross-checked against farmland (PostGIS) | **NASA EONET** ✅ real |
-| ☀️ **Space Weather** | Geomagnetic storms → autonomous **GPS alerts** | **NASA DONKI** ✅ real |
-| 🔭 **Outreach** | APOD adapted to the audience + ISS passes | **NASA APOD** ✅ real |
-| ☄️ **Asteroids** | Hazardous NEOs, de-sensationalized | **NASA NeoWs** ✅ real |
-| 💬 **Consultant** | **Natural-language Q&A grounded on every agent** | **gpt-5.4 + Foundry IQ** |
+|  **Agricultural** | Crop health via NDVI, anomalies vs history, water/thermal stress | **NASA MODIS**  real |
+|  **Disasters** | Wildfires/floods cross-checked against farmland (PostGIS) | **NASA EONET**  real |
+|  **Space Weather** | Geomagnetic storms → autonomous **GPS alerts** | **NASA DONKI**  real |
+|  **Outreach** | APOD adapted to the audience + ISS passes | **NASA APOD**  real |
+|  **Asteroids** | Hazardous NEOs, de-sensationalized | **NASA NeoWs**  real |
+|  **Consultant** | **Natural-language Q&A grounded on every agent** | **gpt-5.4 + Foundry IQ** |
 
-## 💡 The star: the Foundry IQ Consultant
+##  The star: the Foundry IQ Consultant
 
 Ask anything in plain language. The **Consultant Agent** — a **gpt-5.4 reasoning model on Azure AI Foundry** — does three steps:
 
-1. **🔎 Retrieve** the relevant agent reports from **Foundry IQ** (Azure AI Search knowledge base)
-2. **🧠 Reason** over the retrieved context
-3. **✅ Answer citing every source** — and **if it lacks data, it says so. Zero hallucination.**
+1. ** Retrieve** the relevant agent reports from **Foundry IQ** (Azure AI Search knowledge base)
+2. ** Reason** over the retrieved context
+3. ** Answer citing every source** — and **if it lacks data, it says so. Zero hallucination.**
 
 And it's a **closed loop**: every report the agents generate is **auto-indexed into Foundry IQ**, so the Consultant always answers with the latest knowledge — no manual sync.
 
@@ -53,14 +53,14 @@ And it's a **closed loop**: every report the agents generate is **auto-indexed i
 agents produce reports  →  Foundry IQ indexes them  →  Consultant answers, cited
 ```
 
-## 🏆 Why it stands out
+##  Why it stands out
 
-- **🛰️ Unique cross-domain angle** — space weather ↔ agriculture. Nothing else connects them.
-- **▶️ It actually runs** end-to-end, on **real NASA data**, **fully on Azure AI Foundry** — no external API keys.
-- **🛡️ Trustworthy by design** — grounded, cited, anti-hallucination (our *Golden Rule*).
-- **🌽 Real impact** — anticipates water stress, disasters and GPS failures for Latin American farmers: **food security.**
+- ** Unique cross-domain angle** — space weather ↔ agriculture. Nothing else connects them.
+- ** It actually runs** end-to-end, on **real NASA data**, **fully on Azure AI Foundry** — no external API keys.
+- ** Trustworthy by design** — grounded, cited, anti-hallucination (our *Golden Rule*).
+- ** Real impact** — anticipates water stress, disasters and GPS failures for Latin American farmers: **food security.**
 
-## 🧱 Architecture — the *Golden Rule*
+##  Architecture — the *Golden Rule*
 
 ```
 ┌────────────────────────────────────────────────────────────┐
@@ -82,18 +82,18 @@ agents produce reports  →  Foundry IQ indexes them  →  Consultant answers, c
 
 | Source | Real? |
 |--------|-------|
-| Space weather — DONKI | ✅ Real NASA API |
-| Asteroids — NeoWs | ✅ Real NASA API |
-| Disasters — EONET | ✅ Real NASA API |
-| Astronomy — APOD | ✅ Real NASA API |
-| **Crop health — NDVI** | ✅ **Real — NASA MODIS MOD13Q1 (ORNL DAAC), no auth** |
-| ISS passes | ⚠️ Simulated (the Open Notify API was discontinued) |
+| Space weather — DONKI |  Real NASA API |
+| Asteroids — NeoWs |  Real NASA API |
+| Disasters — EONET |  Real NASA API |
+| Astronomy — APOD |  Real NASA API |
+| **Crop health — NDVI** |  **Real — NASA MODIS MOD13Q1 (ORNL DAAC), no auth** |
+| ISS passes |  imulated (the Open Notify API was discontinued) |
 
-## 🧰 Tech stack
+##  Tech stack
 
 **Azure AI Foundry** · **Foundry IQ** (Azure AI Search) · **gpt-5.4 / gpt-5.4-mini** reasoning models · **LangGraph** · **FastAPI** · **React + Vite** · **Supabase** (PostgreSQL/PostGIS) · Celery.
 
-## ⚡ Quick start
+## Quick start
 
 ```bash
 # 1) Configure credentials (Azure AI Foundry + Foundry IQ + Supabase) in .env
@@ -117,7 +117,7 @@ curl -X POST http://localhost:8000/api/agents/consult \
 - **Dashboard:** http://localhost:5173
 - **API docs (Swagger):** http://localhost:8000/docs
 
-## 📡 Key endpoints
+##  Key endpoints
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
@@ -127,13 +127,13 @@ curl -X POST http://localhost:8000/api/agents/consult \
 | POST | `/api/agents/space-weather` | Agent 3 — Kp + inter-agent GPS alert |
 | POST | `/api/ingest/all` | Trigger ingestion from all NASA sources |
 
-## 👩‍🚀 Team
+##  Team
 
 Built for the **Microsoft Agents League Hackathon** by students at the
 **Universidad Nacional de Córdoba (FCEFyN)**, Argentina.
 
 <div align="center">
 
-**SatellAI — where space weather meets the harvest.** 🌾🛰️
+**SatellAI — where space weather meets the harvest.** 
 
 </div>
