@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { Leaf, PlayCircle, Map } from 'lucide-react'
 import { runAgricultural } from '../api/agentsApi'
 import MarkdownReport from '../components/MarkdownReport'
+import TitleIcon from '../components/TitleIcon'
+import leafIcon from '../assets/icons/leaf.svg'
 
 const REGIONS = [
   { value: '', label: 'Todas las zonas' },
@@ -43,7 +45,9 @@ export default function Agricultural() {
   return (
     <div className="animate-in">
       <div className="page-header">
-        <h2>🌱 Monitoreo Agrícola Core</h2>
+        <h2 style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <TitleIcon src={leafIcon} color="#10b981" /> Monitoreo Agrícola Core
+        </h2>
         <p>Agente 1 — Ingeniero Agrónomo Senior · NDVI + NASA Earthdata + NASA POWER</p>
       </div>
 

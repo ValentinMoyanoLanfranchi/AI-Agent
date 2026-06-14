@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { Telescope, PlayCircle, Star } from 'lucide-react'
 import { runEducational } from '../api/agentsApi'
 import MarkdownReport from '../components/MarkdownReport'
+import TitleIcon from '../components/TitleIcon'
+import scienceIcon from '../assets/icons/science.svg'
 
 const PROFILES = [
   { value: 'NIÑO', label: '👶 Niño (8-12 años)', desc: 'Analogías cotidianas, tono lúdico, frases simples' },
@@ -49,7 +51,9 @@ export default function Educational() {
   return (
     <div className="animate-in">
       <div className="page-header">
-        <h2>🔭 Divulgación Científica</h2>
+        <h2 style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <TitleIcon src={scienceIcon} color="#8b5cf6" /> Divulgación Científica
+        </h2>
         <p>Agente 4 — Divulgador Científico Internacional · NASA APOD + ISS Open Notify</p>
       </div>
 
