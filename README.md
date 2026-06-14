@@ -78,7 +78,7 @@ agents produce reports  →  Foundry IQ indexes them  →  Consultant answers, c
 
 > **Golden Rule:** agents **never** hit external APIs during a user query. They reason over a **local replica** (Supabase). The NASA/MODIS APIs are only called by the **ingestion layer** (scheduled or on-demand). Result: latency drops from ~5 s to **milliseconds**, and the system is **immune to NASA outages and rate limits**.
 
-## 🛰️ Honest about the data
+##  Honest about the data
 
 | Source | Real? |
 |--------|-------|
@@ -121,7 +121,7 @@ curl -X POST http://localhost:8000/api/agents/consult \
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| POST | `/api/agents/consult` | 💬 **Consultant** — grounded, cited answers (Foundry IQ) |
+| POST | `/api/agents/consult` |  **Consultant** — grounded, cited answers (Foundry IQ) |
 | POST | `/api/agents/run-all` | Run the full 5-agent pipeline |
 | POST | `/api/agents/agricultural` | Agent 1 — NDVI monitoring (real MODIS) |
 | POST | `/api/agents/space-weather` | Agent 3 — Kp + inter-agent GPS alert |
