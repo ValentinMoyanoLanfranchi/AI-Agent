@@ -206,11 +206,12 @@ async def fetch_eonet_events(days: int = 30, status: str = "open") -> Dict:
     """Eventos activos de EONET, filtrados para Sudamérica."""
     async with httpx.AsyncClient(timeout=30) as client:
         resp = await client.get(
-            f"{NASA_BASE}/EONET/v3/events",
+            # Host directo de EONET: el proxy api.nasa.gov da 503 intermitente.
+            # El endpoint directo es más estable y no requiere api_key.
+            "https://eonet.gsfc.nasa.gov/api/v3/events",
             params={
                 "days": days,
                 "status": status,
-                "api_key": settings.nasa_api_key,
             }
         )
         resp.raise_for_status()

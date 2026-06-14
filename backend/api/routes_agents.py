@@ -14,6 +14,7 @@ from agents.agent2_disasters import run_agent2
 from agents.agent3_space_weather import run_agent3
 from agents.agent4_educational import run_agent4
 from agents.agent5_neows import run_agent5
+from agents.foundry_consultant import run_consultant
 from notifications.resend_client import send_alert_email, format_report_as_html
 from notifications.slack_client import send_slack_alert
 from database.session import AsyncSessionLocal
@@ -133,6 +134,12 @@ class ReportItem(BaseModel):
 class ReportsResponse(BaseModel):
     total: int = Field(examples=[2])
     reports: list[ReportItem]
+
+
+class ConsultRequest(BaseModel):
+    """Pregunta en lenguaje natural para el Agente Consultor (Foundry + Foundry IQ)."""
+    question: str = Field(..., min_length=3, max_length=1000)
+    top_k: int = Field(default=5, ge=1, le=15)
 
 
 # ─── Helper: guardar reporte en DB ────────────────────────────
@@ -404,6 +411,34 @@ async def run_neows_agent(
     result = await run_agent5(days_ahead=request.days_ahead)
 
     background_tasks.add_task(save_agent_report, 5, "agent5_neows", "monitoring", result)
+
+    return result
+
+
+# ─────────────────────────────────────────────────────────────
+# POST /api/agents/consult — Agente Consultor (Microsoft Foundry + Foundry IQ)
+# ─────────────────────────────────────────────────────────────
+
+@router.post("/consult")
+async def consult_agent(
+    request: ConsultRequest,
+    background_tasks: BackgroundTasks,
+):
+    """
+    Agente Consultor — Track Reasoning Agents (Microsoft Foundry) + Foundry IQ.
+
+    Responde preguntas en lenguaje natural sobre el estado del sistema con respuestas
+    GROUNDED y CITADAS recuperadas del knowledge base de Foundry IQ (anti-alucinación).
+
+    Razonamiento multi-paso: retrieve (Foundry IQ) → reason (Foundry) → grounded answer.
+    """
+    result = await run_consultant(question=request.question, top_k=request.top_k)
+
+    # Persistir la consulta como reporte del "agente 6"
+    background_tasks.add_task(save_agent_report, 6, "agent6_consultant", "consult", {
+        "report": result.get("answer", ""),
+        "severity": "INFO",
+    })
 
     return result
 
