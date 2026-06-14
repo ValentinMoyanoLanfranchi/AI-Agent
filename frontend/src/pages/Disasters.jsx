@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { AlertTriangle, PlayCircle } from 'lucide-react'
 import { runDisasters } from '../api/agentsApi'
+import MarkdownReport from '../components/MarkdownReport'
 
 const CATEGORIES = [
   { value: '', label: 'Todas las categorías' },
@@ -120,7 +121,7 @@ export default function Disasters() {
               ⚠️ Error: {result.error}
             </div>
           ) : (
-            <div className="report-container">{result.report}</div>
+            <MarkdownReport>{result.report}</MarkdownReport>
           )}
         </div>
       )}

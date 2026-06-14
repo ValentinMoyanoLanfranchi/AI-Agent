@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Leaf, PlayCircle, Map } from 'lucide-react'
 import { runAgricultural } from '../api/agentsApi'
+import MarkdownReport from '../components/MarkdownReport'
 
 const REGIONS = [
   { value: '', label: 'Todas las zonas' },
@@ -134,7 +135,7 @@ export default function Agricultural() {
                 <div className="badge badge-minimal">🌿 Zona: {result.region_code || 'Todas'}</div>
                 <div className="badge badge-low">🕐 {result.generated_at?.slice(0, 19).replace('T', ' ')} UTC</div>
               </div>
-              <div className="report-container">{result.report}</div>
+              <MarkdownReport>{result.report}</MarkdownReport>
             </>
           )}
         </div>

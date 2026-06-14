@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Telescope, PlayCircle, Star } from 'lucide-react'
 import { runEducational } from '../api/agentsApi'
+import MarkdownReport from '../components/MarkdownReport'
 
 const PROFILES = [
   { value: 'NIÑO', label: '👶 Niño (8-12 años)', desc: 'Analogías cotidianas, tono lúdico, frases simples' },
@@ -132,7 +133,7 @@ export default function Educational() {
               ⚠️ Error: {result.error}
             </div>
           ) : (
-            <div className="report-container">{result.report}</div>
+            <MarkdownReport>{result.report}</MarkdownReport>
           )}
         </div>
       )}

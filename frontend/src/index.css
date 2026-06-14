@@ -428,6 +428,103 @@ body::before {
   font-family: 'Inter', monospace;
 }
 
+/* ─── Markdown Report Rendering ──────────────────────────────── */
+.markdown-report {
+  white-space: normal;
+  font-family: 'Inter', sans-serif;
+}
+
+.markdown-report > *:first-child { margin-top: 0; }
+.markdown-report > *:last-child { margin-bottom: 0; }
+
+.markdown-report h2 {
+  font-family: var(--font-display);
+  font-size: 19px;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin: 24px 0 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.markdown-report h3 {
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 700;
+  color: #fbbf24;
+  margin: 20px 0 10px;
+}
+
+.markdown-report h4,
+.markdown-report h5,
+.markdown-report h6 {
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  margin: 16px 0 8px;
+}
+
+.markdown-report p {
+  margin: 0 0 12px;
+  color: var(--text-secondary);
+}
+
+.markdown-report ul {
+  margin: 0 0 14px;
+  padding-left: 22px;
+  list-style: none;
+}
+
+.markdown-report li {
+  position: relative;
+  margin-bottom: 6px;
+  color: var(--text-secondary);
+}
+
+.markdown-report li::before {
+  content: '▸';
+  position: absolute;
+  left: -18px;
+  color: var(--border-glow);
+  font-weight: 700;
+}
+
+.markdown-report strong {
+  color: var(--text-primary);
+  font-weight: 700;
+}
+
+.markdown-report em { color: var(--text-primary); }
+
+.markdown-report code {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--border-color);
+  border-radius: 5px;
+  padding: 1px 6px;
+  font-family: 'JetBrains Mono', 'Courier New', monospace;
+  font-size: 12.5px;
+  color: #93c5fd;
+}
+
+.markdown-report a {
+  color: #60a5fa;
+  text-decoration: none;
+  border-bottom: 1px solid rgba(96, 165, 250, 0.35);
+  word-break: break-all;
+}
+
+.markdown-report a:hover {
+  color: #93c5fd;
+  border-bottom-color: #93c5fd;
+}
+
+.markdown-report hr {
+  border: none;
+  border-top: 1px solid var(--border-color);
+  margin: 18px 0;
+}
+
 .report-container::-webkit-scrollbar {
   width: 6px;
 }

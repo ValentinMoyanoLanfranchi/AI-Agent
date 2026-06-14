@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Sun, PlayCircle, Radio } from 'lucide-react'
 import { runSpaceWeather } from '../api/agentsApi'
+import MarkdownReport from '../components/MarkdownReport'
 
 function SeverityBadge({ severity = 'MINIMAL' }) {
   const cls = `badge badge-${(severity || 'minimal').toLowerCase()}`
@@ -122,7 +123,7 @@ export default function SpaceWeather() {
               ⚠️ Error: {result.error}
             </div>
           ) : (
-            <div className="report-container">{result.report}</div>
+            <MarkdownReport>{result.report}</MarkdownReport>
           )}
         </div>
       )}

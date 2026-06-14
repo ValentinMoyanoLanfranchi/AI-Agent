@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Zap, PlayCircle, ShieldAlert } from 'lucide-react'
 import { runNeoWs } from '../api/agentsApi'
+import MarkdownReport from '../components/MarkdownReport'
 
 export default function NeoWs() {
   const [daysAhead, setDaysAhead] = useState(7)
@@ -113,7 +114,7 @@ export default function NeoWs() {
               ⚠️ Error: {result.error}
             </div>
           ) : (
-            <div className="report-container">{result.report}</div>
+            <MarkdownReport>{result.report}</MarkdownReport>
           )}
         </div>
       )}
