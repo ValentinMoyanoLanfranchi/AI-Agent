@@ -1,176 +1,139 @@
-# 🛰️ Sistema de Agentes IA — Hackathon Junio 2026
+<div align="center">
 
-Sistema multiagente de monitoreo espacial y agrícola basado en **LangGraph**, consumiendo APIs de NASA.
+# 🛰️ SatellAI
 
-> **Agents League Hackathon · Track Reasoning Agents (Microsoft Foundry) · Capa IQ: Foundry IQ**
->
-> 6 agentes que ayudan a productores de Latinoamérica a anticipar riesgos —estrés hídrico, desastres
-> naturales y pérdida de precisión GPS por clima espacial—. **Todo el cómputo corre en Azure AI Foundry**;
-> el conocimiento se sirve con **Foundry IQ**: respuestas citadas y *grounded* que reducen la alucinación.
+### *When a solar storm threatens the harvest*
 
-## 🏗️ Arquitectura
+**The only multi-agent system that bridges space weather and agriculture.**
+Six AI agents running on **Microsoft Azure AI Foundry** monitor real NASA data, **talk to each other**, and answer in natural language with **cited, grounded responses — zero hallucination — powered by Foundry IQ.**
+
+![Azure AI Foundry](https://img.shields.io/badge/Azure_AI_Foundry-0078D4?logo=microsoftazure&logoColor=white)
+![Foundry IQ](https://img.shields.io/badge/Foundry_IQ-grounded_&_cited-6E40C9)
+![Model](https://img.shields.io/badge/gpt--5.4-reasoning_agent-00A67E)
+![Python](https://img.shields.io/badge/Python-3.13+-3776AB?logo=python&logoColor=white)
+![React](https://img.shields.io/badge/React-Vite-61DAFB?logo=react&logoColor=black)
+![Track](https://img.shields.io/badge/Track-Reasoning_Agents-FF6B35)
+
+![SatellAI — Foundry IQ Consultant answering with cited sources](docs/consultor-chat.png)
+
+</div>
+
+---
+
+## 🌎 The problem
+
+Autonomous farm machinery across **Latin America depends on GPS**. A geomagnetic storm — triggered by the Sun 150 million km away — can **degrade that GPS and ruin a planting or a harvest**. Two worlds that nobody connects: space weather and the field.
+
+## ✨ What SatellAI does
+
+Six cognitive agents monitor the Southern Cone with **real NASA data** and — crucially — **communicate with each other**:
+
+> ⚡ When the **Space Weather agent** detects a geomagnetic storm (Kp above threshold), it **automatically alerts the Agricultural agent** about GPS precision loss in autonomous machinery. **Agents talking to agents, with no human in the loop.**
+
+| Agent | What it does | Data source |
+|-------|--------------|-------------|
+| 🌱 **Agricultural** | Crop health via NDVI, anomalies vs history, water/thermal stress | **NASA MODIS** ✅ real |
+| 🌪️ **Disasters** | Wildfires/floods cross-checked against farmland (PostGIS) | **NASA EONET** ✅ real |
+| ☀️ **Space Weather** | Geomagnetic storms → autonomous **GPS alerts** | **NASA DONKI** ✅ real |
+| 🔭 **Outreach** | APOD adapted to the audience + ISS passes | **NASA APOD** ✅ real |
+| ☄️ **Asteroids** | Hazardous NEOs, de-sensationalized | **NASA NeoWs** ✅ real |
+| 💬 **Consultant** | **Natural-language Q&A grounded on every agent** | **gpt-5.4 + Foundry IQ** |
+
+## 💡 The star: the Foundry IQ Consultant
+
+Ask anything in plain language. The **Consultant Agent** — a **gpt-5.4 reasoning model on Azure AI Foundry** — does three steps:
+
+1. **🔎 Retrieve** the relevant agent reports from **Foundry IQ** (Azure AI Search knowledge base)
+2. **🧠 Reason** over the retrieved context
+3. **✅ Answer citing every source** — and **if it lacks data, it says so. Zero hallucination.**
+
+And it's a **closed loop**: every report the agents generate is **auto-indexed into Foundry IQ**, so the Consultant always answers with the latest knowledge — no manual sync.
 
 ```
-┌──────────────────────────────────────────────────────────────────┐
-│  CAPA 4: OUTPUT — Resend (email) + Slack Webhooks + Dashboard    │
-├──────────────────────────────────────────────────────────────────┤
-│  CAPA 3: ORQUESTACIÓN — LangGraph + GPT-4o / Claude 3.5 Sonnet   │
-│    ├─ Agente 1: Monitoreo Agrícola Core (NDVI + NASA Earthdata)  │
-│    ├─ Agente 2: Alertas Desastres (NASA EONET + PostGIS)         │
-│    ├─ Agente 3: Clima Espacial (NASA DONKI + Inter-Agente)       │
-│    ├─ Agente 4: Divulgación (NASA APOD + ISS Open Notify)        │
-│    └─ Agente 5: Asteroides (NASA NeoWs)                          │
-├──────────────────────────────────────────────────────────────────┤
-│  CAPA 2: DATOS — PostgreSQL/PostGIS + Redis                       │
-├──────────────────────────────────────────────────────────────────┤
-│  CAPA 1: INGESTA — Celery + Celery Beat (ETL programado)         │
-└──────────────────────────────────────────────────────────────────┘
+agents produce reports  →  Foundry IQ indexes them  →  Consultant answers, cited
 ```
 
-## 💡 Integración Microsoft IQ — Agents League Hackathon
+## 🏆 Why it stands out
 
-Este proyecto cumple el requisito obligatorio de integrar una capa **Microsoft IQ**:
+- **🛰️ Unique cross-domain angle** — space weather ↔ agriculture. Nothing else connects them.
+- **▶️ It actually runs** end-to-end, on **real NASA data**, **fully on Azure AI Foundry** — no external API keys.
+- **🛡️ Trustworthy by design** — grounded, cited, anti-hallucination (our *Golden Rule*).
+- **🌽 Real impact** — anticipates water stress, disasters and GPS failures for Latin American farmers: **food security.**
 
-| Item | Implementación |
-|------|----------------|
-| **Track** | 🧠 Reasoning Agents (Microsoft Foundry) |
-| **Capa IQ** | 💡 **Foundry IQ** — recuperación de conocimiento agéntica con respuestas citadas/grounded |
-| **Agente** | **Agente Consultor** (`agent6_consultant`) — `POST /api/agents/consult` |
-| **Modelo** | **gpt-5.4** (razonador) para el Consultor · **gpt-5.4-mini** para los 5 agentes — todo en Azure AI Foundry |
+## 🧱 Architecture — the *Golden Rule*
 
-![Consultor IA — chat conversacional grounded con citas de Foundry IQ](docs/consultor-chat.png)
+```
+┌────────────────────────────────────────────────────────────┐
+│  OUTPUT     Dashboard (React) · Chat Consultant · Slack/Email │
+├────────────────────────────────────────────────────────────┤
+│  REASONING  Azure AI Foundry · gpt-5.4 (Consultant) /         │
+│             gpt-5.4-mini (5 agents) · LangGraph orchestration │
+│  KNOWLEDGE  Foundry IQ  (Azure AI Search, cited retrieval)    │
+├────────────────────────────────────────────────────────────┤
+│  DATA       Supabase — PostgreSQL + PostGIS (local replica)  │
+├────────────────────────────────────────────────────────────┤
+│  INGEST     Scheduled / on-demand ETL → real NASA & MODIS    │
+└────────────────────────────────────────────────────────────┘
+```
 
-**Cómo funciona** (razonamiento multi-paso, anti-alucinación):
-1. **RETRIEVE** → recupera contexto citado desde el knowledge base de Foundry IQ (Azure AI Search).
-2. **REASON** → razona sobre el contexto con el modelo desplegado en Azure AI Foundry.
-3. **GROUND** → devuelve la respuesta **con citas verificables** de cada fuente.
+> **Golden Rule:** agents **never** hit external APIs during a user query. They reason over a **local replica** (Supabase). The NASA/MODIS APIs are only called by the **ingestion layer** (scheduled or on-demand). Result: latency drops from ~5 s to **milliseconds**, and the system is **immune to NASA outages and rate limits**.
 
-Es la materialización técnica de la **Regla de Oro** del sistema: los agentes solo responden
-desde la réplica local de conocimiento, nunca alucinan datos.
+## 🛰️ Honest about the data
 
-**🔁 Loop cerrado (auto-sync):** cada reporte que generan los agentes se **indexa automáticamente**
-en Foundry IQ (vía `save_agent_report`), así el Consultor siempre responde con el conocimiento
-más reciente — sin sincronización manual.
+| Source | Real? |
+|--------|-------|
+| Space weather — DONKI | ✅ Real NASA API |
+| Asteroids — NeoWs | ✅ Real NASA API |
+| Disasters — EONET | ✅ Real NASA API |
+| Astronomy — APOD | ✅ Real NASA API |
+| **Crop health — NDVI** | ✅ **Real — NASA MODIS MOD13Q1 (ORNL DAAC), no auth** |
+| ISS passes | ⚠️ Simulated (the Open Notify API was discontinued) |
 
-**Activación:**
+## 🧰 Tech stack
+
+**Azure AI Foundry** · **Foundry IQ** (Azure AI Search) · **gpt-5.4 / gpt-5.4-mini** reasoning models · **LangGraph** · **FastAPI** · **React + Vite** · **Supabase** (PostgreSQL/PostGIS) · Celery.
+
+## ⚡ Quick start
+
 ```bash
-# 1. Cargar credenciales de Azure en .env (ver bloque AZURE_AI_FOUNDRY_* y AZURE_SEARCH_*)
-# 2. Poblar el knowledge base de Foundry IQ con los reportes de los agentes:
-python -m ingestion.foundry_iq_sync
-# 3. Consultar:
-curl -X POST http://localhost:8000/api/agents/consult \
-  -H "Content-Type: application/json" \
-  -d '{"question": "¿Hay riesgo GPS para la maquinaria agrícola esta semana?"}'
-```
+# 1) Configure credentials (Azure AI Foundry + Foundry IQ + Supabase) in .env
+cp .env.example .env       # then fill AZURE_* and DATABASE_URL
 
-> **Degradación automática:** si Azure aún no está configurado, el Agente Consultor responde
-> en *modo grounded local* (desde PostgreSQL) con citas reales — el demo nunca se rompe.
-
-## ⚡ Inicio Rápido
-
-### 1. Pre-requisitos
-- Docker Desktop instalado y corriendo
-- Python 3.11+ (solo para desarrollo local)
-- Node 20+ (para frontend en modo dev)
-
-### 2. Configurar variables de entorno
-
-```bash
-# El archivo .env ya está creado con defaults para hackathon
-# Solo necesitás reemplazar las API keys de LLM:
-```
-
-Editar `.env` y reemplazar:
-- `OPENAI_API_KEY=sk-REEMPLAZAR-CON-TU-KEY`
-- `ANTHROPIC_API_KEY=sk-ant-REEMPLAZAR-CON-TU-KEY`
-
-### 3. Levantar el sistema completo
-
-```bash
-# Opción A: Docker Compose (RECOMENDADO para producción)
+# 2A) Docker (full stack: backend + worker + frontend + DB)
 docker compose up --build
 
-# Opción B: Desarrollo local (más rápido para iterar)
-# Terminal 1 — Backend
+# 2B) Local (Supabase + uvicorn)
 cd backend
-pip install -r requirements.txt
-uvicorn main:app --reload
+./start_services.sh --reload          # installs deps, migrates, runs the API
+cd ../frontend && npm install && npm run dev   # dashboard on :5173
 
-# Terminal 2 — Celery Worker
-cd backend
-celery -A ingestion.tasks worker --loglevel=info
-
-# Terminal 3 — Frontend
-cd frontend
-npm install && npm run dev
-```
-
-### 4. Cargar datos iniciales
-
-```bash
-# Una vez que los servicios están corriendo:
+# 3) Seed real data and ask the Consultant
 curl -X POST http://localhost:8000/api/ingest/all
+curl -X POST http://localhost:8000/api/agents/consult \
+  -H "Content-Type: application/json" \
+  -d '{"question": "Is there a GPS risk for farm machinery this week?"}'
 ```
-
-O usar el botón **"Seed Data"** en el Dashboard.
-
-### 5. Ejecutar los agentes
 
 - **Dashboard:** http://localhost:5173
-- **API Docs:** http://localhost:8000/docs
-- **Agente 1:** `POST /api/agents/agricultural`
-- **Todos:** `POST /api/agents/run-all`
+- **API docs (Swagger):** http://localhost:8000/docs
 
-## 🔑 APIs Requeridas
+## 📡 Key endpoints
 
-| API | URL | Key Requerida |
-|-----|-----|---------------|
-| NASA APIs | https://api.nasa.gov/ | `NASA_API_KEY` (DEMO_KEY funciona) |
-| OpenAI | https://platform.openai.com/ | `OPENAI_API_KEY` |
-| Anthropic | https://console.anthropic.com/ | `ANTHROPIC_API_KEY` |
-| Resend (opcional) | https://resend.com/ | `RESEND_API_KEY` |
-| Slack (opcional) | https://api.slack.com/ | `SLACK_WEBHOOK_URL` |
-
-## 🧠 Regla de Oro
-
-> **Prohibido** el consumo directo de APIs externas durante prompts de usuario.
-> Los agentes se alimentan **exclusivamente** de las réplicas locales en PostgreSQL.
-> Las APIs externas solo se consumen desde **Celery** (background).
-
-## 📡 Endpoints
-
-| Método | Endpoint | Descripción |
+| Method | Endpoint | Description |
 |--------|----------|-------------|
-| GET | `/health` | Health check del sistema |
-| GET | `/api/agents/status` | Estado de los 5 agentes |
-| POST | `/api/agents/run-all` | Pipeline completo |
-| POST | `/api/agents/agricultural` | Agente 1: Monitoreo Agrícola |
-| POST | `/api/agents/disasters` | Agente 2: Desastres Naturales |
-| POST | `/api/agents/space-weather` | Agente 3: Clima Espacial |
-| POST | `/api/agents/educational` | Agente 4: Divulgación |
-| POST | `/api/agents/neows` | Agente 5: Asteroides |
-| POST | `/api/agents/consult` | 🧠 Agente Consultor (Foundry + Foundry IQ) — respuestas grounded |
-| POST | `/api/ingest/all` | Iniciar ingesta de todas las fuentes |
-| GET | `/api/agents/reports` | Historial de reportes |
+| POST | `/api/agents/consult` | 💬 **Consultant** — grounded, cited answers (Foundry IQ) |
+| POST | `/api/agents/run-all` | Run the full 5-agent pipeline |
+| POST | `/api/agents/agricultural` | Agent 1 — NDVI monitoring (real MODIS) |
+| POST | `/api/agents/space-weather` | Agent 3 — Kp + inter-agent GPS alert |
+| POST | `/api/ingest/all` | Trigger ingestion from all NASA sources |
 
-## 🌍 Zonas Agrícolas Monitoreadas
+## 👩‍🚀 Team
 
-- 🇦🇷 Pampa Húmeda — Buenos Aires (`ARG-BA-PAMPA`)
-- 🇦🇷 Córdoba — Zona Norte (`ARG-COR-AGRO`)
-- 🇧🇷 Mato Grosso — Cerrado (`BRA-MT-CERRADO`)
-- 🇺🇾 Uruguay — Soriano (`URY-SORIANO`)
-- 🇨🇱 Chile — Araucanía (`CHI-ARAUCANIA`)
+Built for the **Microsoft Agents League Hackathon** by students at the
+**Universidad Nacional de Córdoba (FCEFyN)**, Argentina.
 
-## ⚠️ Alerta Inter-Agente (Agente 3 → Agente 1)
+<div align="center">
 
-Cuando el índice Kp supera 5.0, el sistema genera automáticamente:
-1. Un registro en `inter_agent_alerts` en PostgreSQL
-2. Una notificación Slack del canal inter-agente
-3. La próxima ejecución del Agente 1 detecta la alerta pendiente
+**SatellAI — where space weather meets the harvest.** 🌾🛰️
 
-## 🏆 Hackathon Notes
-
-- **Tiempo:** 24-48 horas
-- **NASA API Key:** DEMO_KEY incluida (30 req/hora — suficiente para demo)
-- **Datos NDVI:** Simulados con variaciones estacionales realistas del Cono Sur
-- **LLM:** Configurar una key de OpenAI o Anthropic para activar los agentes
+</div>
