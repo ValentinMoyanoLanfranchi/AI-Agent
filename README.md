@@ -8,12 +8,6 @@ Sistema multiagente de monitoreo espacial y agrícola basado en **LangGraph**, c
 > naturales y pérdida de precisión GPS por clima espacial—. **Todo el cómputo corre en Azure AI Foundry**;
 > el conocimiento se sirve con **Foundry IQ**: respuestas citadas y *grounded* que reducen la alucinación.
 
-### 🏆 Alineación con los premios
-- **💡 Best Use of IQ** — Foundry IQ es la columna vertebral: recupera los reportes de los agentes y responde **citando fuentes**, sin alucinar.
-- **🧠 Best Reasoning Agent** — modelo razonador **gpt-5.4** + razonamiento multi-paso cruzando fuentes + **alerta inter-agente** (clima espacial → GPS agrícola).
-- **🎗️ Hack for Good** — impacto en seguridad alimentaria: anticipa riesgos para el agro del Cono Sur.
-- **🎓 Top Student** — desarrollado por estudiante de la **UNC (FCEFyN)**.
-
 ## 🏗️ Arquitectura
 
 ```
